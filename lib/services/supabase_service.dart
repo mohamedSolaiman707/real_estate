@@ -36,8 +36,44 @@ class SupabaseService {
   }
 
   // Leads/Customers
-  Future<void> insertLead(Map<String, dynamic> leadData) async {
-    await _supabase.from('leads').insert(leadData);
+  Future<Map<String, dynamic>> createLeadOrCustomer({
+    required String name,
+    required String phone,
+    String? email,
+  }) async {
+    // Check if customer exists by phone
+    final existing = await _supabase
+        .from('customers')
+        .select()
+        .eq('phone', phone)
+        .maybeSingle();
+
+    if (existing != null) return existing;
+
+    // Create new customer
+    final response = await _supabase.from('customers').insert({
+      'name': name,
+      'phone': phone,
+      'email': email,
+    }).select().single();
+
+    return response;
+  }
+
+  // Tours
+  Future<void> requestTour({
+    required String propertyId,
+    required String customerId,
+    required DateTime date,
+    String? notes,
+  }) async {
+    await _supabase.from('tours').insert({
+      'property_id': propertyId,
+      'customer_id': customerId,
+      'scheduled_date': date.toIso8601String().split('T')[0],
+      'status': 'pending',
+      'notes': notes,
+    });
   }
 
   // Chat
