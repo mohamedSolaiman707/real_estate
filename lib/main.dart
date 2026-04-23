@@ -12,11 +12,18 @@ import 'constants/colors.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // قراءة القيم من البيئة
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  // قراءة القيم وتنظيفها من أي فواصل منقوطة أو مسافات زائدة
+  String supabaseUrl = const String.fromEnvironment('SUPABASE_URL').trim();
+  String supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY').trim();
 
-  // التحقق من وجود القيم قبل البدء
+  // إزالة الفصلة المنقوطة لو وجدت في النهاية (بسبب أخطاء الإدخال)
+  if (supabaseUrl.endsWith(';')) {
+    supabaseUrl = supabaseUrl.substring(0, supabaseUrl.length - 1);
+  }
+  if (supabaseAnonKey.endsWith(';')) {
+    supabaseAnonKey = supabaseAnonKey.substring(0, supabaseAnonKey.length - 1);
+  }
+
   if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
     try {
       await Supabase.initialize(
@@ -28,7 +35,7 @@ Future<void> main() async {
       debugPrint('Error initializing Supabase: $e');
     }
   } else {
-    debugPrint('Critical Error: Supabase keys are missing! Check --dart-define flags.');
+    debugPrint('Critical Error: Supabase keys are missing!');
   }
 
   runApp(const MyApp());
