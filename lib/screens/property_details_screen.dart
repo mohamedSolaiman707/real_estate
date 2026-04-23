@@ -3,6 +3,7 @@ import '../models/property.dart';
 import '../constants/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:url_launcher/url_launcher.dart';
 
 class PropertyDetailsScreen extends StatelessWidget {
   const PropertyDetailsScreen({super.key});
@@ -10,180 +11,236 @@ class PropertyDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final property = ModalRoute.of(context)!.settings.arguments as Property;
+    final isWeb = MediaQuery.of(context).size.width > 900;
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          title: Text(property.title),
+          title: Text(property.title, style: const TextStyle(fontSize: 18)),
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          elevation: 0,
         ),
         body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildImageGallery(property),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(property.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                        Text('${intl.NumberFormat.decimalPattern().format(property.price)} ج.م',
-                          style: const TextStyle(fontSize: 22, color: AppColors.primary, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, color: Colors.grey),
-                        Text(property.location, style: const TextStyle(fontSize: 16, color: Colors.grey)),
-                      ],
-                    ),
-                    const Divider(height: 32),
-                    const Text('التفاصيل', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    _buildDetailsGrid(property),
-                    const SizedBox(height: 24),
-                    const Text('الوصف', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text(property.description, style: const TextStyle(fontSize: 16)),
-                    if (property.isForInvestment) ...[
-                      const SizedBox(height: 24),
-                      _buildInvestmentSection(),
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              padding: EdgeInsets.symmetric(
+                horizontal: isWeb ? 32 : 16,
+                vertical: 24,
+              ),
+              child: isWeb 
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 2, child: _buildMainContent(property)),
+                      const SizedBox(width: 32),
+                      Expanded(flex: 1, child: _buildSidebar(context, property)),
                     ],
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _selectTourTime(context),
-                            icon: const Icon(Icons.calendar_month),
-                            label: const Text('اطلب جولة'),
-                            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {}, // WhatsApp share
-                            icon: const Icon(Icons.share),
-                            label: const Text('شارك على WhatsApp'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 100), // Spacing for bottom
-                  ],
+                  )
+                : Column(
+                    children: [
+                      _buildImageGallery(property),
+                      _buildMainContent(property),
+                      const SizedBox(height: 24),
+                      _buildSidebar(context, property),
+                    ],
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainContent(Property property) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (MediaQueryData.fromView(WidgetsBinding.instance.platformDispatcher.views.first).size.width > 900)
+          _buildImageGallery(property),
+        
+        const SizedBox(height: 24),
+        Text(property.title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(Icons.location_on, color: AppColors.secondary, size: 20),
+            const SizedBox(width: 4),
+            Text(property.location, style: const TextStyle(fontSize: 16, color: Colors.grey)),
+          ],
+        ),
+        const Divider(height: 40),
+        
+        const Text('المواصفات الأساسية', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 16),
+        _buildDetailsGrid(property),
+        
+        const Divider(height: 40),
+        const Text('وصف العقار', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        Text(property.description, style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.black87)),
+        
+        if (property.isForInvestment) ...[
+          const SizedBox(height: 32),
+          _buildInvestmentCard(property),
+        ],
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildSidebar(BuildContext context, Property property) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('السعر المطلوب', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Text('${intl.NumberFormat.decimalPattern().format(property.price)} ج.م',
+              style: const TextStyle(fontSize: 26, color: AppColors.primary, fontWeight: FontWeight.bold)),
+            const Divider(height: 32),
+            
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                onPressed: () => _launchWhatsApp(property),
+                icon: const Icon(Icons.chat, color: Colors.white),
+                label: const Text('تواصل عبر واتساب', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: OutlinedButton.icon(
+                onPressed: () => _selectTourTime(context),
+                icon: const Icon(Icons.calendar_month),
+                label: const Text('طلب معاينة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildImageGallery(Property property) {
-    return SizedBox(
-      height: 300,
-      child: PageView.builder(
-        itemCount: 3, // Mocking multiple images
-        itemBuilder: (context, index) {
-          return CachedNetworkImage(
-            imageUrl: property.imageUrl,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Container(color: Colors.grey[200]),
-          );
-        },
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: CachedNetworkImage(
+          imageUrl: property.imageUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(color: Colors.grey[100], child: const Center(child: CircularProgressIndicator())),
+          errorWidget: (context, url, error) => const Icon(Icons.error),
+        ),
       ),
     );
   }
 
   Widget _buildDetailsGrid(Property property) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      childAspectRatio: 4,
+    return Wrap(
+      spacing: 24,
+      runSpacing: 16,
       children: [
-        _buildDetailItem(Icons.square_foot, 'المساحة: ${property.area} م²'),
-        _buildDetailItem(Icons.king_bed, 'الغرف: ${property.bedrooms}'),
-        _buildDetailItem(Icons.bathtub, 'الحمامات: ${property.bathrooms}'),
-        _buildDetailItem(Icons.apartment, 'النوع: ${property.type}'),
+        _buildDetailBox(Icons.square_foot, '${property.area} م²', 'المساحة'),
+        _buildDetailBox(Icons.king_bed, '${property.bedrooms}', 'غرف النوم'),
+        _buildDetailBox(Icons.bathtub, '${property.bathrooms}', 'الحمامات'),
+        _buildDetailBox(Icons.apartment, property.type, 'نوع العقار'),
       ],
     );
   }
 
-  Widget _buildDetailItem(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Text(text),
-      ],
-    );
-  }
-
-  Widget _buildInvestmentSection() {
+  Widget _buildDetailBox(IconData icon, String value, String label) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: 120,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey[200]!),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text('معلومات الاستثمار', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-          SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('العائد السنوي المتوقع:'),
-              Text('8% - 10%', style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('متوسط الإيجار الشهري:'),
-              Text('5,000 ج.م', style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
+        children: [
+          Icon(icon, color: AppColors.primary, size: 24),
+          const SizedBox(height: 8),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
         ],
       ),
     );
   }
 
+  Widget _buildInvestmentCard(Property property) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.trending_up, color: AppColors.primary),
+              SizedBox(width: 8),
+              Text('تحليل الاستثمار', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildInvestmentRow('العائد السنوي المتوقع (ROI):', '12% - 15%'),
+          const SizedBox(height: 8),
+          _buildInvestmentRow('متوسط الإيجار في المنطقة:', '6,000 ج.م'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInvestmentRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 15)),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+      ],
+    );
+  }
+
+  void _launchWhatsApp(Property p) async {
+    final msg = Uri.encodeComponent('أهلاً، أنا مهتم بعقار: ${p.title} في ${p.location}');
+    final url = Uri.parse("https://wa.me/201014250577?text=$msg");
+    if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
   Future<void> _selectTourTime(BuildContext context) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 30)),
     );
     if (date != null) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
-      );
-      if (time != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم تسجيل طلب الجولة، سنتواصل معك للتأكيد')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل طلبك، سنتواصل معك للتأكيد ✅')));
     }
   }
 }

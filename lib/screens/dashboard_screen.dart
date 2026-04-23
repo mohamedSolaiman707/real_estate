@@ -39,7 +39,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     List<String> imageUrls = [];
     for (var file in files) {
       if (file.bytes == null) continue;
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name.replaceAll(' ', '_')}';
+      
+      // حل مشكلة الحروف العربي: نستخدم التوقيت الزمني فقط كاسم للملف
+      final extension = file.extension ?? 'jpg';
+      final fileName = '${DateTime.now().microsecondsSinceEpoch}.$extension';
       final path = 'property_images/$fileName';
 
       try {
@@ -47,13 +50,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           path,
           file.bytes!,
           fileOptions: FileOptions(
-            contentType: 'image/${file.extension ?? 'jpeg'}',
+            contentType: 'image/$extension',
             upsert: true,
           ),
         );
         final url = _supabase.storage.from('properties').getPublicUrl(path);
         imageUrls.add(url);
       } catch (e) {
+        debugPrint('Upload Error: $e');
         rethrow;
       }
     }
@@ -69,6 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final descController = TextEditingController();
     final roomsController = TextEditingController(text: '0');
     final bathroomsController = TextEditingController(text: '0');
+    final bathsController = TextEditingController(text: '0');
     final floorController = TextEditingController(text: '0');
     final yearController = TextEditingController(text: DateTime.now().year.toString());
     final roiController = TextEditingController(text: '0');
@@ -224,7 +229,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         'location': locationController.text.trim(),
                         'type': type,
                         'bedrooms': int.tryParse(roomsController.text) ?? 0,
-                        'bathrooms': int.tryParse(bathroomsController.text) ?? 0,
+                        'bathrooms': int.tryParse(bathsController.text) ?? 0,
                         'floor': int.tryParse(floorController.text) ?? 0,
                         'build_year': int.tryParse(yearController.text) ?? 0,
                         'roi': double.tryParse(roiController.text) ?? 0.0,
@@ -242,7 +247,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     } catch (e) {
                       setDialogState(() => isSaving = false);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.danger));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.danger, duration: const Duration(seconds: 5)));
                       }
                     }
                   }
