@@ -40,7 +40,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (var file in files) {
       if (file.bytes == null) continue;
       
-      // حل مشكلة الحروف العربي: نستخدم التوقيت الزمني فقط كاسم للملف
       final extension = file.extension ?? 'jpg';
       final fileName = '${DateTime.now().microsecondsSinceEpoch}.$extension';
       final path = 'property_images/$fileName';
@@ -73,7 +72,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final descController = TextEditingController();
     final roomsController = TextEditingController(text: '0');
     final bathroomsController = TextEditingController(text: '0');
-    final bathsController = TextEditingController(text: '0');
     final floorController = TextEditingController(text: '0');
     final yearController = TextEditingController(text: DateTime.now().year.toString());
     final roiController = TextEditingController(text: '0');
@@ -271,6 +269,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           title: const Text('لوحة التحكم الاحترافية 💼'),
           centerTitle: true,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.analytics_outlined),
+              tooltip: 'التحليلات والأداء',
+              onPressed: () => Navigator.pushNamed(context, '/analytics'),
+            ),
             IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchLeads),
             IconButton(icon: const Icon(Icons.logout), onPressed: () => Navigator.pushReplacementNamed(context, '/')),
           ],
