@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'constants/keys.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/listings_screen.dart';
@@ -13,12 +12,13 @@ import 'constants/colors.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-
-
+  // قراءة القيم من Vercel Environment Variables
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
   await Supabase.initialize(
-    url: Keys.supabaseUrl,
-    anonKey: Keys.supabaseAnonKey,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
   runApp(const MyApp());
