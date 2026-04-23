@@ -74,7 +74,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           _buildSectionTitle('التقدم نحو الهدف الشهري'),
                           _buildProgressSection(),
                           const SizedBox(height: 24),
-                          _buildSectionTitle('توزيع العقارات المتاحة بالسوق'),
+                          _buildSectionTitle('توزيع العقارات المتاحة بالسوق '),
                           _buildPieChartSection(),
                           const SizedBox(height: 24),
                           _buildSectionTitle('رؤى السوق'),
