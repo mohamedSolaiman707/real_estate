@@ -45,16 +45,69 @@ class SupabaseService {
     await _supabase.from('messages').insert(messageData);
   }
 
-  // Dashboard Stats (Example)
+  // Dashboard Stats (Real Data from Supabase)
   Future<Map<String, dynamic>> getDashboardStats() async {
-    // This would ideally be a RPC or multiple queries
-    final customersCount = await _supabase.from('customers').count();
-    // Simplified for demo
-    return {
-      'new_customers': customersCount,
-      'tours_today': 5,
-      'expected_deals': 2,
-      'commission': 15000,
-    };
+    try {
+      // 1. Get New Customers Count
+      final customersResponse = await _supabase
+          .from('customers')
+          .select('id')
+          .count(CountOption.exact);
+      final customersCount = customersResponse.count;
+
+      // 2. Get Today's Tours
+      final today = DateTime.now().toIso8601String().split('T')[0];
+      final toursResponse = await _supabase
+          .from('tours')
+          .select('id')
+          .gte('tour_date', '$today 00:00:00')
+          .lte('tour_date', '$today 23:59:59')
+          .count(CountOption.exact);
+      final toursToday = toursResponse.count;
+
+      // 3. Get Expected Deals (from Leads)
+      final leadsResponse = await _supabase
+          .from('leads')
+          .select('id')
+          .count(CountOption.exact);
+      final totalLeads = leadsResponse.count;
+      final expectedDeals = ((totalLeads ?? 0) * 0.2).floor(); 
+
+      // 4. Get Property Distribution for Chart
+      final propsResponse = await _supabase.from('properties').select('type');
+      final List<dynamic> props = propsResponse as List;
+      Map<String, int> distribution = {};
+      for (var p in props) {
+        String type = p['type'] ?? 'أخرى';
+        distribution[type] = (distribution[type] ?? 0) + 1;
+      }
+
+      // 5. Calculate Portfolio Value / Commission
+      final pricesResponse = await _supabase.from('properties').select('price');
+      double totalValue = 0;
+      for (var p in pricesResponse as List) {
+        totalValue += (p['price'] as num).toDouble();
+      }
+      final commission = (totalValue * 0.01).floor(); 
+
+      return {
+        'new_customers': customersCount ?? 0,
+        'tours_today': toursToday ?? 0,
+        'expected_deals': expectedDeals,
+        'commission': commission,
+        'distribution': distribution,
+        'total_properties': props.length,
+      };
+    } catch (e) {
+      print('Error fetching stats: $e');
+      return {
+        'new_customers': 0,
+        'tours_today': 0,
+        'expected_deals': 0,
+        'commission': 0,
+        'distribution': {},
+        'total_properties': 0,
+      };
+    }
   }
 }

@@ -45,26 +45,30 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle('نظرة عامة على الأداء'),
-                    _buildStatsCards(),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('التقدم نحو الهدف الشهري'),
-                    _buildProgressSection(),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('توزيع العقارات بالسوق'),
-                    SizedBox(height: 300, child: _buildPieChart()),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('أداء المناطق'),
-                    _buildMarketInsightsTable(),
-                    const SizedBox(height: 24),
-                    _buildMotivationCard(),
-                    const SizedBox(height: 40),
-                  ],
+            : RefreshIndicator(
+                onRefresh: _loadData,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle('نظرة عامة على الأداء الحقيقي'),
+                      _buildStatsCards(),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('التقدم نحو الهدف الشهري'),
+                      _buildProgressSection(),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('توزيع العقارات المتاحة بالسوق'),
+                      SizedBox(height: 300, child: _buildPieChart()),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('رؤى السوق'),
+                      _buildMarketInsightsTable(),
+                      const SizedBox(height: 24),
+                      _buildMotivationCard(),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
         floatingActionButton: FloatingActionButton.extended(
@@ -93,10 +97,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       mainAxisSpacing: 16,
       childAspectRatio: 1.5,
       children: [
-        _buildStatCard('عملاء جدد', '${_stats['new_customers'] ?? 0}', Colors.blue),
+        _buildStatCard('عملاء بالداتابيز', '${_stats['new_customers'] ?? 0}', Colors.blue),
         _buildStatCard('معاينات اليوم', '${_stats['tours_today'] ?? 0}', Colors.orange),
-        _buildStatCard('صفقات متوقعة', '${_stats['expected_deals'] ?? 0}', Colors.purple),
-        _buildStatCard('عمولة (ج.م)', '${_stats['commission'] ?? 0}', Colors.green),
+        _buildStatCard('تقدير الفرص', '${_stats['expected_deals'] ?? 0}', Colors.purple),
+        _buildStatCard('قيمة المحفظة (تقديري)', '${_stats['commission'] ?? 0}', Colors.green),
       ],
     );
   }
@@ -109,13 +113,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
-          Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildProgressSection() {
+    double progress = 0.0;
+    int totalProps = _stats['total_properties'] ?? 0;
+    if (totalProps > 0) {
+      progress = (totalProps / 10).clamp(0.0, 1.0); // Example: Goal is 10 listings
+    }
+    
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -123,23 +136,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('الهدف الشهري: 10 صفقات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text('80%', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
+                const Text('الهدف الشهري: 10 عقارات جديدة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text('${(progress * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
               ],
             ),
             const SizedBox(height: 12),
             LinearProgressIndicator(
-              value: 0.8,
+              value: progress,
               backgroundColor: Colors.grey[200],
               color: AppColors.success,
               minHeight: 12,
               borderRadius: BorderRadius.circular(10),
             ),
             const SizedBox(height: 12),
-            const Text('عاش يا بطل! باقي لك صفتين بس وتقفل التارجت 🎯', style: TextStyle(color: Colors.grey)),
+            Text(
+              progress >= 1.0 
+                ? 'مبروك! حققت هدف الشهر بالكامل 🏆' 
+                : 'فاضلك ${(10 - totalProps).clamp(0, 10)} عقارات عشان توصل للهدف الشهري 💪', 
+              style: const TextStyle(color: Colors.grey)
+            ),
           ],
         ),
       ),
@@ -155,49 +173,63 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         child: DataTable(
           headingRowColor: MaterialStateProperty.all(AppColors.primary.withOpacity(0.05)),
           columns: const [
-            DataColumn(label: Text('المنطقة', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('عدد الصفقات', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('متوسط العائد', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('نوع العقار', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('العدد المتاح', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
           ],
-          rows: const [
-            DataRow(cells: [DataCell(Text('الحي الغربي')), DataCell(Text('45')), DataCell(Text('12%'))]),
-            DataRow(cells: [DataCell(Text('وسط المدينة')), DataCell(Text('30')), DataCell(Text('15%'))]),
-            DataRow(cells: [DataCell(Text('الضواحي')), DataCell(Text('25')), DataCell(Text('8%'))]),
-          ],
+          rows: (_stats['distribution'] as Map<String, int>?)?.entries.map((e) => DataRow(cells: [
+            DataCell(Text(e.key)),
+            DataCell(Text(e.value.toString())),
+            const DataCell(Text('نشط', style: TextStyle(color: Colors.green))),
+          ])).toList() ?? [],
         ),
       ),
     );
   }
 
   Widget _buildPieChart() {
+    final Map<String, int> dist = _stats['distribution'] as Map<String, int>? ?? {};
+    if (dist.isEmpty) return const Center(child: Text('لا توجد بيانات للعرض'));
+
+    final List<Color> colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple];
+    int colorIndex = 0;
+
     return PieChart(
       PieChartData(
         sectionsSpace: 2,
         centerSpaceRadius: 40,
-        sections: [
-          PieChartSectionData(value: 40, title: 'شقق', color: Colors.blue, radius: 50, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          PieChartSectionData(value: 30, title: 'فيلات', color: Colors.green, radius: 50, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          PieChartSectionData(value: 20, title: 'تجاري', color: Colors.orange, radius: 50, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          PieChartSectionData(value: 10, title: 'أراضي', color: Colors.red, radius: 50, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ],
+        sections: dist.entries.map((e) {
+          final color = colors[colorIndex % colors.length];
+          colorIndex++;
+          return PieChartSectionData(
+            value: e.value.toDouble(),
+            title: e.key,
+            color: color,
+            radius: 50,
+            titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+          );
+        }).toList(),
       ),
     );
   }
 
   Widget _buildMotivationCard() {
+    int totalProps = _stats['total_properties'] ?? 0;
     return Card(
       color: AppColors.secondary,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: const Padding(
-        padding: EdgeInsets.all(24.0),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Row(
           children: [
-            Icon(Icons.emoji_events, size: 48, color: Colors.white),
-            SizedBox(width: 16),
+            const Icon(Icons.emoji_events, size: 48, color: Colors.white),
+            const SizedBox(width: 16),
             Expanded(
               child: Text(
-                'أنت حالياً في المركز الثالث على مستوى الشركة! استمر 💪',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                totalProps > 5 
+                  ? 'أداء رائع! عندك $totalProps عقار نشط في السوق حالياً 🚀'
+                  : 'البداية قوية! استمر في إضافة العقارات لزيادة فرص البيع 📈',
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],
