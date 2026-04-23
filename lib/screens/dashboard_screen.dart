@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:typed_data';
 import '../constants/colors.dart';
 import '../constants/strings.dart';
 
@@ -39,6 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<List<String>> _uploadImages(List<PlatformFile> files) async {
     List<String> imageUrls = [];
     for (var file in files) {
+      if (file.bytes == null) continue;
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
       final path = 'property_images/$fileName';
 
@@ -56,16 +56,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _showAddPropertyDialog() {
     final formKey = GlobalKey<FormState>();
+    final titleController = TextEditingController();
+    final locationController = TextEditingController();
+    final priceController = TextEditingController();
+    final areaController = TextEditingController();
+    final descController = TextEditingController();
+    final roomsController = TextEditingController(text: '0');
+    final bathsController = TextEditingController(text: '0');
+    final floorController = TextEditingController(text: '0');
+    final yearController = TextEditingController(text: DateTime.now().year.toString());
+    final roiController = TextEditingController(text: '0');
+
     bool isSaving = false;
     List<PlatformFile> selectedFiles = [];
-
-    // متغيرات الحالة للفورم الديناميكي
     String purpose = 'بيع';
     String type = 'شقة';
-    String location = ''; // أصبحت نص حر
-    String title = '', description = '', status = 'available';
-    int price = 0, area = 0, bedrooms = 0, bathrooms = 0, floor = 0, buildYear = DateTime.now().year, avgRent = 0;
-    double roi = 0.0;
     bool isFeatured = false;
 
     showDialog(
@@ -87,43 +92,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
                       child: Row(
                         children: [
-                          const Text('الغرض:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text('الغرض:'),
                           const SizedBox(width: 20),
                           ChoiceChip(
-                            label: const Text('بيع 💰'),
+                            label: const Text('بيع'),
                             selected: purpose == 'بيع',
                             onSelected: (val) => setDialogState(() => purpose = 'بيع'),
                           ),
                           const SizedBox(width: 10),
                           ChoiceChip(
-                            label: const Text('إيجار 🔑'),
+                            label: const Text('إيجار'),
                             selected: purpose == 'إيجار',
                             onSelected: (val) => setDialogState(() => purpose = 'إيجار'),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-
+                    const SizedBox(height: 16),
                     TextFormField(
-                      decoration: const InputDecoration(labelText: 'عنوان العقار (مثلاً: شقة تمليك بالاستاد)', border: OutlineInputBorder()),
-                      onChanged: (v) => title = v,
-                      validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: 'عنوان الإعلان (مطلوب)', border: OutlineInputBorder()),
+                      validator: (v) => v!.isEmpty ? 'يرجى إدخال العنوان' : null,
                     ),
                     const SizedBox(height: 16),
-                    
-                    // المنطقة ونوع العقار (المنطقة الآن نص حر)
                     Row(
                       children: [
                         Expanded(
                           child: TextFormField(
-                            decoration: const InputDecoration(
-                              labelText: 'المنطقة / العنوان بالتفصيل 📍',
-                              hintText: 'مثلاً: طنطا - شارع البحر',
-                              border: OutlineInputBorder()
-                            ),
-                            onChanged: (v) => location = v,
-                            validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                            controller: locationController,
+                            decoration: const InputDecoration(labelText: 'المنطقة / العنوان بالتفصيل 📍', border: OutlineInputBorder()),
+                            validator: (v) => v!.isEmpty ? 'يرجى إدخال الموقع' : null,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -138,67 +136,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // السعر والمساحة
                     Row(
                       children: [
-                        if (purpose == 'بيع')
-                          Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'سعر البيع (ج.م)', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => price = int.tryParse(v) ?? 0))
-                        else
-                          Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'الإيجار الشهري (ج.م)', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => avgRent = int.tryParse(v) ?? 0)),
+                        Expanded(child: TextFormField(controller: priceController, decoration: InputDecoration(labelText: purpose == 'بيع' ? 'سعر البيع' : 'الإيجار الشهري'), keyboardType: TextInputType.number)),
                         const SizedBox(width: 12),
-                        Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => area = int.tryParse(v) ?? 0)),
+                        Expanded(child: TextFormField(controller: areaController, decoration: const InputDecoration(labelText: 'المساحة (م²)'), keyboardType: TextInputType.number)),
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // حقول المباني (تختفي لو أرض)
                     if (type != 'أرض')
-                      Column(
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'غرف النوم', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => bedrooms = int.tryParse(v) ?? 0)),
-                              const SizedBox(width: 12),
-                              Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => bathrooms = int.tryParse(v) ?? 0)),
-                              
-                              // إظهار "الدور" فقط لو شقة أو محل
-                              if (type == 'شقة' || type == 'محل تجاري')
-                                ...[
-                                  const SizedBox(width: 12),
-                                  Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => floor = int.tryParse(v) ?? 0)),
-                                ],
-                            ],
-                          ),
-                          const SizedBox(height: 16),
+                          Expanded(child: TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف'), keyboardType: TextInputType.number)),
+                          const SizedBox(width: 12),
+                          Expanded(child: TextFormField(controller: bathsController, decoration: const InputDecoration(labelText: 'الحمامات'), keyboardType: TextInputType.number)),
+                          if (type == 'شقة') 
+                            Expanded(child: Padding(padding: const EdgeInsets.only(right: 12), child: TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور'), keyboardType: TextInputType.number))),
                         ],
                       ),
-
-                    // الاستثمار (ROI) - يظهر فقط في البيع
+                    const SizedBox(height: 16),
                     if (purpose == 'بيع')
                       Row(
                         children: [
-                          Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'العائد المتوقع ROI %', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => roi = double.tryParse(v) ?? 0.0)),
+                          Expanded(child: TextFormField(controller: roiController, decoration: const InputDecoration(labelText: 'العائد ROI %'), keyboardType: TextInputType.number)),
                           const SizedBox(width: 12),
-                          Expanded(child: TextFormField(decoration: const InputDecoration(labelText: 'سنة البناء', border: OutlineInputBorder()), keyboardType: TextInputType.number, onChanged: (v) => buildYear = int.tryParse(v) ?? DateTime.now().year)),
+                          Expanded(child: TextFormField(controller: yearController, decoration: const InputDecoration(labelText: 'سنة البناء'), keyboardType: TextInputType.number)),
                         ],
                       ),
-                    
                     const SizedBox(height: 16),
-                    TextFormField(
-                      decoration: const InputDecoration(labelText: 'وصف إضافي', border: OutlineInputBorder()),
-                      maxLines: 2,
-                      onChanged: (v) => description = v,
-                    ),
+                    TextFormField(controller: descController, decoration: const InputDecoration(labelText: 'وصف إضافي', border: OutlineInputBorder()), maxLines: 2),
                     const SizedBox(height: 24),
-
-                    // رفع الصور
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)),
                       child: Column(
                         children: [
-                          const Text('صور العقار 📸', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text('صور العقار 📸'),
                           const SizedBox(height: 12),
                           if (selectedFiles.isNotEmpty)
                             Wrap(spacing: 8, children: selectedFiles.map((f) => Chip(label: Text(f.name), onDeleted: () => setDialogState(() => selectedFiles.remove(f)))).toList()),
@@ -207,18 +180,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               final result = await FilePicker.pickFiles(type: FileType.image, allowMultiple: true);
                               if (result != null) setDialogState(() => selectedFiles.addAll(result.files));
                             },
-                            icon: const Icon(Icons.add_photo_alternate),
+                            icon: const Icon(Icons.add_a_photo),
                             label: const Text('اختيار صور من الجهاز'),
                           ),
                         ],
                       ),
                     ),
-                    
-                    CheckboxListTile(
-                      title: const Text('تمييز العقار في الموقع'),
-                      value: isFeatured,
-                      onChanged: (v) => setDialogState(() => isFeatured = v!),
-                    ),
+                    CheckboxListTile(title: const Text('تمييز العقار'), value: isFeatured, onChanged: (v) => setDialogState(() => isFeatured = v!)),
                   ],
                 ),
               ),
@@ -235,25 +203,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     setDialogState(() => isSaving = true);
                     try {
                       List<String> imageUrls = [];
-                      if (selectedFiles.isNotEmpty) imageUrls = await _uploadImages(selectedFiles);
+                      if (selectedFiles.isNotEmpty) {
+                        imageUrls = await _uploadImages(selectedFiles);
+                      }
 
                       await _supabase.from('properties').insert({
-                        'title': title, 'description': description, 'price': purpose == 'بيع' ? price : 0,
-                        'area': area, 'location': location, 'type': type, 'bedrooms': bedrooms, 'bathrooms': bathrooms,
-                        'floor': (type == 'شقة' || type == 'محل تجاري') ? floor : 0,
-                        'build_year': buildYear, 'avg_rent': purpose == 'إيجار' ? avgRent : 0, 'roi': roi,
-                        'purpose': purpose, 'status': status, 'images': imageUrls, 'is_featured': isFeatured,
-                        'created_at': DateTime.now().toIso8601String(), 'admin_id': _supabase.auth.currentUser?.id,
+                        'title': titleController.text.trim(),
+                        'description': descController.text.trim(),
+                        'price': int.tryParse(priceController.text) ?? 0,
+                        'area': int.tryParse(areaController.text) ?? 0,
+                        'location': locationController.text.trim(),
+                        'type': type,
+                        'bedrooms': int.tryParse(roomsController.text) ?? 0,
+                        'bathrooms': int.tryParse(bathsController.text) ?? 0,
+                        'floor': int.tryParse(floorController.text) ?? 0,
+                        'build_year': int.tryParse(yearController.text) ?? 0,
+                        'roi': double.tryParse(roiController.text) ?? 0.0,
+                        'purpose': purpose,
+                        'images': imageUrls,
+                        'is_featured': isFeatured,
+                        'created_at': DateTime.now().toIso8601String(),
                       });
 
                       if (context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح! ✅'), backgroundColor: AppColors.success));
-                        _fetchLeads();
                       }
                     } catch (e) {
                       setDialogState(() => isSaving = false);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ في الحفظ: $e'), backgroundColor: AppColors.danger));
+                      }
                     }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('من فضلك املأ الحقول المطلوبة (باللون الأحمر)'), backgroundColor: Colors.orange));
                   }
                 },
                 child: const Text('حفظ ونشر العقار'),
@@ -270,98 +253,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          title: const Text('لوحة التحكم الاحترافية 💼'),
-          centerTitle: true,
-          actions: [
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchLeads),
-            IconButton(icon: const Icon(Icons.logout), onPressed: () => Navigator.pushReplacementNamed(context, '/')),
-          ],
-        ),
+        appBar: AppBar(title: const Text('لوحة التحكم الاحترافية 💼')),
         body: _isLoading ? const Center(child: CircularProgressIndicator()) : _buildBody(),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _showAddPropertyDialog,
           backgroundColor: AppColors.secondary,
-          icon: const Icon(Icons.add_business, color: Colors.white),
-          label: const Text('إضافة عقار جديد', style: TextStyle(color: Colors.white)),
+          icon: const Icon(Icons.add),
+          label: const Text('إضافة عقار جديد'),
         ),
       ),
     );
   }
 
   Widget _buildBody() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('إدارة الطلبات والعملاء 📋', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          _buildLeadsList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLeadsList() {
-    if (_leads.isEmpty) return const Center(child: Text('لا توجد طلبات حالياً'));
     return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
       itemCount: _leads.length,
       itemBuilder: (context, index) {
         final lead = _leads[index];
-        final isChatbot = lead['source'] == 'chatbot';
-        final formData = lead['form_data'] as Map<String, dynamic>? ?? {};
-
         return Card(
-          elevation: 2,
-          margin: const EdgeInsets.only(bottom: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          child: ExpansionTile(
-            leading: Icon(isChatbot ? Icons.smart_toy_outlined : Icons.person, color: isChatbot ? Colors.blue : Colors.green),
+          child: ListTile(
             title: Text(lead['name'] ?? 'عميل'),
-            subtitle: Text('رقم: ${lead['phone']}'),
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Divider(),
-                    const Text('تفاصيل الطلب 📄:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
-                    const SizedBox(height: 8),
-                    if (isChatbot)
-                      Text('💬 ملخص المحادثة: ${formData['chat_summary'] ?? "استفسار عام"}')
-                    else
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          Chip(label: Text('🏠 ${formData['property_type'] ?? ""}')),
-                          Chip(label: Text('📍 ${formData['location'] ?? ""}')),
-                          Chip(label: Text('💰 ${formData['budget'] ?? ""} ج.م')),
-                          Chip(label: Text('🚪 ${formData['rooms'] ?? ""} غرف')),
-                        ],
-                      ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: ElevatedButton.icon(onPressed: () => _launchWhatsApp(lead['phone']), icon: const Icon(Icons.chat), label: const Text('واتساب'), style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), foregroundColor: Colors.white))),
-                        const SizedBox(width: 8),
-                        Expanded(child: ElevatedButton.icon(onPressed: () => _makePhoneCall(lead['phone']), icon: const Icon(Icons.phone), label: const Text('اتصال'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white))),
-                      ],
-                    )
-                  ],
-                ),
-              )
-            ],
+            subtitle: Text(lead['phone']),
+            trailing: IconButton(icon: const Icon(Icons.chat, color: Colors.green), onPressed: () => launchUrl(Uri.parse("https://wa.me/20${lead['phone']}"))),
           ),
         );
       },
     );
   }
-
-  Future<void> _makePhoneCall(String p) async => await launchUrl(Uri(scheme: 'tel', path: p));
-  Future<void> _launchWhatsApp(String p) async => await launchUrl(Uri.parse("https://wa.me/20$p"));
 }
