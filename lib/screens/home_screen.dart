@@ -67,9 +67,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _submitLead() async {
     if (_formKey.currentState!.validate()) {
       try {
+        // طباعة البيانات للتأكد قبل الإرسال
+        debugPrint('Submitting lead: $_name, $_phone');
+        
         await _supabase.from('leads').insert({
-          'name': _name,
-          'phone': _phone,
+          'name': _name.trim(),
+          'phone': _phone.trim(),
           'source': 'home_form',
           'form_data': {
             'property_type': _selectedType,
@@ -90,9 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
           _formKey.currentState!.reset();
         }
       } catch (e) {
+        debugPrint('Supabase Insert Error: $e');
         if (mounted) {
+          // إظهار الخطأ الحقيقي للمساعدة في التشخيص
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('حدث خطأ أثناء إرسال البيانات')),
+            SnackBar(content: Text('خطأ: ${e.toString()}')),
           );
         }
       }
@@ -212,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: TextFormField(
                     decoration: const InputDecoration(labelText: AppStrings.nameLabel, border: OutlineInputBorder()),
-                    validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                    validator: (v) => (v == null || v.trim().isEmpty) ? 'مطلوب' : null,
                     onChanged: (value) => _name = value,
                   ),
                 ),
@@ -221,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: TextFormField(
                     decoration: const InputDecoration(labelText: AppStrings.phoneLabel, border: OutlineInputBorder()),
                     keyboardType: TextInputType.phone,
-                    validator: (v) => (v == null || v.length < 11) ? 'رقم غير صحيح' : null,
+                    validator: (v) => (v == null || v.trim().length < 11) ? 'رقم غير صحيح' : null,
                     onChanged: (value) => _phone = value,
                   ),
                 ),
