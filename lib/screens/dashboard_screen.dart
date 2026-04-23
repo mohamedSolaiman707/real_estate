@@ -42,13 +42,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (var file in files) {
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
       final path = 'property_images/$fileName';
-      
+
       await _supabase.storage.from('properties').uploadBinary(
         path,
         file.bytes!,
         fileOptions: FileOptions(contentType: 'image/${file.extension}'),
       );
-      
+
       final url = _supabase.storage.from('properties').getPublicUrl(path);
       imageUrls.add(url);
     }
@@ -59,7 +59,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final formKey = GlobalKey<FormState>();
     bool isSaving = false;
     List<PlatformFile> selectedFiles = [];
-    
+
     // متغيرات مطابقة للـ Schema في الصورة
     String title = '', description = '', location = AppStrings.locations[0], type = AppStrings.propertyTypes[0], purpose = 'بيع', status = 'available';
     int price = 0, area = 0, bedrooms = 0, bathrooms = 0, floor = 0, buildYear = DateTime.now().year, avgRent = 0;
@@ -92,7 +92,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onChanged: (v) => description = v,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // 2. السعر والمساحة والدور
                     Row(
                       children: [
@@ -104,7 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // 3. الغرف والحمامات وسنة البناء
                     Row(
                       children: [
@@ -160,10 +160,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const Text('صور العقار 📸', style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 12),
                           if (selectedFiles.isNotEmpty)
-                             Wrap(spacing: 8, children: selectedFiles.map((f) => Chip(label: Text(f.name), onDeleted: () => setDialogState(() => selectedFiles.remove(f)))).toList()),
+                            Wrap(spacing: 8, children: selectedFiles.map((f) => Chip(label: Text(f.name), onDeleted: () => setDialogState(() => selectedFiles.remove(f)))).toList()),
                           ElevatedButton.icon(
                             onPressed: () async {
-                              final result = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: true);
+                              final result = await FilePicker.pickFiles(type: FileType.image, allowMultiple: true);
                               if (result != null) {
                                 setDialogState(() => selectedFiles.addAll(result.files));
                               }
@@ -174,7 +174,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
-                    
+
                     CheckboxListTile(
                       title: const Text('عقار مميز (يظهر في الهيرو)'),
                       value: isFeatured,
@@ -186,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           actions: [
-            if (isSaving) const CircularProgressIndicator() 
+            if (isSaving) const CircularProgressIndicator()
             else ...[
               TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
               ElevatedButton(
