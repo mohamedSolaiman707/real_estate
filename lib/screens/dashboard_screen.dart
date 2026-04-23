@@ -39,17 +39,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     List<String> imageUrls = [];
     for (var file in files) {
       if (file.bytes == null) continue;
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name.replaceAll(' ', '_')}';
       final path = 'property_images/$fileName';
 
-      await _supabase.storage.from('properties').uploadBinary(
-        path,
-        file.bytes!,
-        fileOptions: FileOptions(contentType: 'image/${file.extension}'),
-      );
-
-      final url = _supabase.storage.from('properties').getPublicUrl(path);
-      imageUrls.add(url);
+      try {
+        await _supabase.storage.from('properties').uploadBinary(
+          path,
+          file.bytes!,
+          fileOptions: FileOptions(
+            contentType: 'image/${file.extension ?? 'jpeg'}',
+            upsert: true,
+          ),
+        );
+        final url = _supabase.storage.from('properties').getPublicUrl(path);
+        imageUrls.add(url);
+      } catch (e) {
+        rethrow;
+      }
     }
     return imageUrls;
   }
@@ -62,7 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final areaController = TextEditingController();
     final descController = TextEditingController();
     final roomsController = TextEditingController(text: '0');
-    final bathsController = TextEditingController(text: '0');
+    final bathroomsController = TextEditingController(text: '0');
     final floorController = TextEditingController(text: '0');
     final yearController = TextEditingController(text: DateTime.now().year.toString());
     final roiController = TextEditingController(text: '0');
@@ -86,7 +92,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    // الغرض (بيع / إيجار)
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
@@ -149,7 +154,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           Expanded(child: TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف'), keyboardType: TextInputType.number)),
                           const SizedBox(width: 12),
-                          Expanded(child: TextFormField(controller: bathsController, decoration: const InputDecoration(labelText: 'الحمامات'), keyboardType: TextInputType.number)),
+                          Expanded(child: TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات'), keyboardType: TextInputType.number)),
                           if (type == 'شقة') 
                             Expanded(child: Padding(padding: const EdgeInsets.only(right: 12), child: TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور'), keyboardType: TextInputType.number))),
                         ],
@@ -177,7 +182,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Wrap(spacing: 8, children: selectedFiles.map((f) => Chip(label: Text(f.name), onDeleted: () => setDialogState(() => selectedFiles.remove(f)))).toList()),
                           ElevatedButton.icon(
                             onPressed: () async {
-                              final result = await FilePicker.pickFiles(type: FileType.image, allowMultiple: true);
+                              final result = await FilePicker.pickFiles(
+                                type: FileType.image, 
+                                allowMultiple: true,
+                                withData: true,
+                              );
                               if (result != null) setDialogState(() => selectedFiles.addAll(result.files));
                             },
                             icon: const Icon(Icons.add_a_photo),
@@ -215,7 +224,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         'location': locationController.text.trim(),
                         'type': type,
                         'bedrooms': int.tryParse(roomsController.text) ?? 0,
-                        'bathrooms': int.tryParse(bathsController.text) ?? 0,
+                        'bathrooms': int.tryParse(bathroomsController.text) ?? 0,
                         'floor': int.tryParse(floorController.text) ?? 0,
                         'build_year': int.tryParse(yearController.text) ?? 0,
                         'roi': double.tryParse(roiController.text) ?? 0.0,
@@ -228,15 +237,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       if (context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحفظ بنجاح! ✅'), backgroundColor: AppColors.success));
+                        _fetchLeads();
                       }
                     } catch (e) {
                       setDialogState(() => isSaving = false);
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ في الحفظ: $e'), backgroundColor: AppColors.danger));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.danger));
                       }
                     }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('من فضلك املأ الحقول المطلوبة (باللون الأحمر)'), backgroundColor: Colors.orange));
                   }
                 },
                 child: const Text('حفظ ونشر العقار'),
@@ -253,7 +261,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('لوحة التحكم الاحترافية 💼')),
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          title: const Text('لوحة التحكم الاحترافية 💼'),
+          centerTitle: true,
+          actions: [
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchLeads),
+            IconButton(icon: const Icon(Icons.logout), onPressed: () => Navigator.pushReplacementNamed(context, '/')),
+          ],
+        ),
         body: _isLoading ? const Center(child: CircularProgressIndicator()) : _buildBody(),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: _showAddPropertyDialog,
@@ -266,19 +282,95 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildBody() {
+    if (_leads.isEmpty) return const Center(child: Text('لا توجد طلبات حالياً'));
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _leads.length,
       itemBuilder: (context, index) {
         final lead = _leads[index];
+        final formData = lead['form_data'] as Map<String, dynamic>? ?? {};
+        final isChatbot = lead['source'] == 'chatbot';
+
         return Card(
-          child: ListTile(
-            title: Text(lead['name'] ?? 'عميل'),
-            subtitle: Text(lead['phone']),
-            trailing: IconButton(icon: const Icon(Icons.chat, color: Colors.green), onPressed: () => launchUrl(Uri.parse("https://wa.me/20${lead['phone']}"))),
+          elevation: 2,
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: ExpansionTile(
+            leading: Icon(
+              isChatbot ? Icons.smart_toy_outlined : Icons.person_outline,
+              color: isChatbot ? Colors.blue : Colors.green,
+            ),
+            title: Text(lead['name'] ?? 'عميل جديد', style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('رقم: ${lead['phone']} | ${isChatbot ? "من الشات" : "من الموقع"}'),
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(),
+                    const Text('تفاصيل الاهتمام 📄:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                    const SizedBox(height: 8),
+                    if (isChatbot)
+                      Text('💬 ملخص المحادثة: ${formData['chat_summary'] ?? "استفسار عام"}')
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (formData['property_type'] != null) _buildDetailChip('🏠 النوع', formData['property_type']),
+                          if (formData['location'] != null) _buildDetailChip('📍 الموقع', formData['location']),
+                          if (formData['budget'] != null) _buildDetailChip('💰 الميزانية', '${formData['budget']} ج.م'),
+                          if (formData['rooms'] != null) _buildDetailChip('🚪 غرف', formData['rooms'].toString()),
+                          if (formData['purpose'] != null) _buildDetailChip('🎯 الغرض', formData['purpose']),
+                        ],
+                      ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), foregroundColor: Colors.white),
+                            onPressed: () => _openWhatsApp(lead['phone'], lead['name'] ?? 'عميلنا'),
+                            icon: const Icon(Icons.chat),
+                            label: const Text('واتساب'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                            onPressed: () => _makePhoneCall(lead['phone']),
+                            icon: const Icon(Icons.phone),
+                            label: const Text('اتصال'),
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              )
+            ],
           ),
         );
       },
     );
+  }
+
+  Widget _buildDetailChip(String label, String value) {
+    return Chip(
+      label: Text('$label: $value', style: const TextStyle(fontSize: 12)),
+      backgroundColor: Colors.grey[100],
+      padding: EdgeInsets.zero,
+    );
+  }
+
+  Future<void> _makePhoneCall(String p) async => await launchUrl(Uri(scheme: 'tel', path: p));
+  Future<void> _openWhatsApp(String phoneNumber, String name) async {
+    String cleanPhone = phoneNumber.startsWith('0') ? '2$phoneNumber' : phoneNumber;
+    final Uri whatsappUri = Uri.parse("https://wa.me/$cleanPhone?text=${Uri.encodeComponent('أهلاً يا $name، بخصوص طلبك في عقارات طنطا...')}");
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+    }
   }
 }
