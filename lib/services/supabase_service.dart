@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/property.dart';
-import '../models/customer.dart';
 
 class SupabaseService {
   final _supabase = Supabase.instance.client;
@@ -18,7 +17,7 @@ class SupabaseService {
       description: json['description'],
       price: (json['price'] as num).toDouble(),
       location: json['location'],
-      imageUrl: (json['images'] as List).isNotEmpty ? json['images'][0] : '',
+      images: (json['images'] as List).map((e) => e.toString()).toList(),
       bedrooms: json['bedrooms'] ?? 0,
       bathrooms: json['bathrooms'] ?? 0,
       area: (json['area'] as num).toDouble(),

@@ -22,7 +22,7 @@ class PropertyCard extends StatelessWidget {
           children: [
             Expanded(
               child: CachedNetworkImage(
-                imageUrl: property.imageUrl,
+                imageUrl: property.mainImage,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 placeholder: (context, url) => Container(color: Colors.grey[200]),

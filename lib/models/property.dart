@@ -4,7 +4,7 @@ class Property {
   final String description;
   final double price;
   final String location;
-  final String imageUrl;
+  final List<String> images;
   final int bedrooms;
   final int bathrooms;
   final double area;
@@ -17,11 +17,13 @@ class Property {
     required this.description,
     required this.price,
     required this.location,
-    required this.imageUrl,
+    required this.images,
     required this.bedrooms,
     required this.bathrooms,
     required this.area,
     required this.type,
     this.isForInvestment = false,
   });
+
+  String get mainImage => images.isNotEmpty ? images[0] : '';
 }

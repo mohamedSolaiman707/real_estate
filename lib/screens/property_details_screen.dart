@@ -5,8 +5,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:url_launcher/url_launcher.dart';
 
-class PropertyDetailsScreen extends StatelessWidget {
+class PropertyDetailsScreen extends StatefulWidget {
   const PropertyDetailsScreen({super.key});
+
+  @override
+  State<PropertyDetailsScreen> createState() => _PropertyDetailsScreenState();
+}
+
+class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
+  int _selectedImageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +50,7 @@ class PropertyDetailsScreen extends StatelessWidget {
                 : Column(
                     children: [
                       _buildImageGallery(property),
-                      _buildMainContent(property),
+                      _buildMainContent(property, showGalleryInContent: false),
                       const SizedBox(height: 24),
                       _buildSidebar(context, property),
                     ],
@@ -55,11 +62,11 @@ class PropertyDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMainContent(Property property) {
+  Widget _buildMainContent(Property property, {bool showGalleryInContent = true}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (MediaQueryData.fromView(WidgetsBinding.instance.platformDispatcher.views.first).size.width > 900)
+        if (showGalleryInContent && MediaQuery.of(context).size.width > 900)
           _buildImageGallery(property),
         
         const SizedBox(height: 24),
@@ -142,17 +149,60 @@ class PropertyDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildImageGallery(Property property) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: CachedNetworkImage(
-          imageUrl: property.imageUrl,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Container(color: Colors.grey[100], child: const Center(child: CircularProgressIndicator())),
-          errorWidget: (context, url, error) => const Icon(Icons.error),
+    if (property.images.isEmpty) return const SizedBox();
+
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: CachedNetworkImage(
+              imageUrl: property.images[_selectedImageIndex],
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(color: Colors.grey[100], child: const Center(child: CircularProgressIndicator())),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            ),
+          ),
         ),
-      ),
+        if (property.images.length > 1) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 80,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: property.images.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedImageIndex = index;
+                    });
+                  },
+                  child: Container(
+                    width: 100,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: _selectedImageIndex == index ? AppColors.primary : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: CachedNetworkImage(
+                        imageUrl: property.images[index],
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -240,6 +290,7 @@ class PropertyDetailsScreen extends StatelessWidget {
       lastDate: DateTime.now().add(const Duration(days: 30)),
     );
     if (date != null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل طلبك، سنتواصل معك للتأكيد ✅')));
     }
   }
