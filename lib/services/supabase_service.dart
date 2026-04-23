@@ -13,15 +13,15 @@ class SupabaseService {
     
     return (response as List).map((json) => Property(
       id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      price: (json['price'] as num).toDouble(),
-      location: json['location'],
-      images: (json['images'] as List).map((e) => e.toString()).toList(),
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      location: json['location'] ?? '',
+      images: (json['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
       bedrooms: json['bedrooms'] ?? 0,
       bathrooms: json['bathrooms'] ?? 0,
-      area: (json['area'] as num).toDouble(),
-      type: json['type'],
+      area: (json['area'] as num?)?.toDouble() ?? 0.0,
+      type: json['type'] ?? '',
       isForInvestment: json['purpose'] == 'استثمار',
     )).toList();
   }
@@ -45,26 +45,25 @@ class SupabaseService {
     await _supabase.from('messages').insert(messageData);
   }
 
-  // Dashboard Stats (Updated to use Leads and Properties)
+  // Dashboard Stats (Updated based on your exact schema)
   Future<Map<String, dynamic>> getDashboardStats() async {
     try {
-      // 1. Get Leads Count (Since customers table is empty)
+      // 1. Get Leads (Real data from leads table)
       final leadsData = await _supabase.from('leads').select('id');
       final totalLeads = (leadsData as List).length;
 
-      // 2. Get Today's Tours (Empty for now, but keeping the logic)
+      // 2. Get Today's Tours (Using scheduled_date column from your image)
       final today = DateTime.now().toIso8601String().split('T')[0];
       final toursData = await _supabase
           .from('tours')
           .select('id')
-          .gte('tour_date', '$today 00:00:00')
-          .lte('tour_date', '$today 23:59:59');
+          .eq('scheduled_date', today); // Matching your column 'scheduled_date'
       final toursToday = (toursData as List).length;
 
-      // 3. Expected Deals (Based on Leads)
-      final expectedDeals = (totalLeads * 0.3).floor(); // 30% conversion estimation
+      // 3. Expected Deals estimation
+      final expectedDeals = (totalLeads * 0.3).floor();
 
-      // 4. Get All Properties for Analytics
+      // 4. Get Properties Data (Using price and type from your image)
       final propsData = await _supabase.from('properties').select('type, price');
       final List<dynamic> allProps = propsData as List;
       
@@ -72,27 +71,24 @@ class SupabaseService {
       double totalPortfolioValue = 0;
 
       for (var p in allProps) {
-        // Distribution
         String type = p['type'] ?? 'أخرى';
         distribution[type] = (distribution[type] ?? 0) + 1;
-        
-        // Portfolio Value
-        totalPortfolioValue += (p['price'] as num).toDouble();
+        totalPortfolioValue += (p['price'] as num?)?.toDouble() ?? 0.0;
       }
 
-      // Calculate a "Projected Commission" (e.g., 2.5% of total portfolio)
-      final estimatedCommission = (totalPortfolioValue * 0.025).floor();
+      // Calculate a metric for "Commission" or Portfolio Impact
+      final estimatedCommission = (totalPortfolioValue * 0.01).floor(); // 1% for visualization
 
       return {
-        'new_customers': totalLeads, // Using leads as customers
+        'new_customers': totalLeads,
         'tours_today': toursToday,
         'expected_deals': expectedDeals,
-        'commission': estimatedCommission, // This will be the Portfolio Value metric
+        'commission': estimatedCommission,
         'distribution': distribution,
         'total_properties': allProps.length,
       };
     } catch (e) {
-      print('Error fetching stats: $e');
+      print('Supabase Stats Error: $e');
       return {
         'new_customers': 0,
         'tours_today': 0,
