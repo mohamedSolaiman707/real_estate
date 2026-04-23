@@ -45,58 +45,51 @@ class SupabaseService {
     await _supabase.from('messages').insert(messageData);
   }
 
-  // Dashboard Stats (Real Data from Supabase)
+  // Dashboard Stats (Updated to use Leads and Properties)
   Future<Map<String, dynamic>> getDashboardStats() async {
     try {
-      // 1. Get New Customers Count
-      final customersResponse = await _supabase
-          .from('customers')
-          .select('id')
-          .count(CountOption.exact);
-      final customersCount = customersResponse.count;
+      // 1. Get Leads Count (Since customers table is empty)
+      final leadsData = await _supabase.from('leads').select('id');
+      final totalLeads = (leadsData as List).length;
 
-      // 2. Get Today's Tours
+      // 2. Get Today's Tours (Empty for now, but keeping the logic)
       final today = DateTime.now().toIso8601String().split('T')[0];
-      final toursResponse = await _supabase
+      final toursData = await _supabase
           .from('tours')
           .select('id')
           .gte('tour_date', '$today 00:00:00')
-          .lte('tour_date', '$today 23:59:59')
-          .count(CountOption.exact);
-      final toursToday = toursResponse.count;
+          .lte('tour_date', '$today 23:59:59');
+      final toursToday = (toursData as List).length;
 
-      // 3. Get Expected Deals (from Leads)
-      final leadsResponse = await _supabase
-          .from('leads')
-          .select('id')
-          .count(CountOption.exact);
-      final totalLeads = leadsResponse.count;
-      final expectedDeals = ((totalLeads ?? 0) * 0.2).floor(); 
+      // 3. Expected Deals (Based on Leads)
+      final expectedDeals = (totalLeads * 0.3).floor(); // 30% conversion estimation
 
-      // 4. Get Property Distribution for Chart
-      final propsResponse = await _supabase.from('properties').select('type');
-      final List<dynamic> props = propsResponse as List;
+      // 4. Get All Properties for Analytics
+      final propsData = await _supabase.from('properties').select('type, price');
+      final List<dynamic> allProps = propsData as List;
+      
       Map<String, int> distribution = {};
-      for (var p in props) {
+      double totalPortfolioValue = 0;
+
+      for (var p in allProps) {
+        // Distribution
         String type = p['type'] ?? 'أخرى';
         distribution[type] = (distribution[type] ?? 0) + 1;
+        
+        // Portfolio Value
+        totalPortfolioValue += (p['price'] as num).toDouble();
       }
 
-      // 5. Calculate Portfolio Value / Commission
-      final pricesResponse = await _supabase.from('properties').select('price');
-      double totalValue = 0;
-      for (var p in pricesResponse as List) {
-        totalValue += (p['price'] as num).toDouble();
-      }
-      final commission = (totalValue * 0.01).floor(); 
+      // Calculate a "Projected Commission" (e.g., 2.5% of total portfolio)
+      final estimatedCommission = (totalPortfolioValue * 0.025).floor();
 
       return {
-        'new_customers': customersCount ?? 0,
-        'tours_today': toursToday ?? 0,
+        'new_customers': totalLeads, // Using leads as customers
+        'tours_today': toursToday,
         'expected_deals': expectedDeals,
-        'commission': commission,
+        'commission': estimatedCommission, // This will be the Portfolio Value metric
         'distribution': distribution,
-        'total_properties': props.length,
+        'total_properties': allProps.length,
       };
     } catch (e) {
       print('Error fetching stats: $e');
