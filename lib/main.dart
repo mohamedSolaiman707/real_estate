@@ -12,17 +12,13 @@ import 'constants/colors.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // قراءة القيم وتنظيفها من أي فواصل منقوطة أو مسافات زائدة
-  String supabaseUrl = const String.fromEnvironment('SUPABASE_URL').trim();
-  String supabaseAnonKey = const String.fromEnvironment('SUPABASE_ANON_KEY').trim();
+  String cleanConfig(String key) {
+    String value = String.fromEnvironment(key).trim();
+    return value.replaceAll(RegExp(r"^['""]+|['"";]"), "");
+  }
 
-  // إزالة الفصلة المنقوطة لو وجدت في النهاية (بسبب أخطاء الإدخال)
-  if (supabaseUrl.endsWith(';')) {
-    supabaseUrl = supabaseUrl.substring(0, supabaseUrl.length - 1);
-  }
-  if (supabaseAnonKey.endsWith(';')) {
-    supabaseAnonKey = supabaseAnonKey.substring(0, supabaseAnonKey.length - 1);
-  }
+  final supabaseUrl = cleanConfig('SUPABASE_URL');
+  final supabaseAnonKey = cleanConfig('SUPABASE_ANON_KEY');
 
   if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
     try {
@@ -30,12 +26,12 @@ Future<void> main() async {
         url: supabaseUrl,
         anonKey: supabaseAnonKey,
       );
-      debugPrint('Supabase initialized successfully');
+      debugPrint('Supabase initialized successfully with URL: $supabaseUrl');
     } catch (e) {
       debugPrint('Error initializing Supabase: $e');
     }
   } else {
-    debugPrint('Critical Error: Supabase keys are missing!');
+    debugPrint('Critical Error: Supabase keys are missing or empty after cleaning!');
   }
 
   runApp(const MyApp());
