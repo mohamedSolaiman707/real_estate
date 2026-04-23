@@ -227,7 +227,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             Expanded(
               child: Text(
                 totalProps > 5 
-                  ? 'أداء رائع! عندك $totalProps عقار نشط في السوق حالياً 🚀'
+                  ? 'أداء رائع! عندك $totalProps  عقار نشط في السوق حالياً 🚀'
                   : 'البداية قوية! استمر في إضافة العقارات لزيادة فرص البيع 📈',
                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               ),
