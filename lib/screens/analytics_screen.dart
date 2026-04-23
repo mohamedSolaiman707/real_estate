@@ -13,6 +13,7 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   final SupabaseService _supabaseService = SupabaseService();
   bool _isLoading = true;
+  bool _hasError = false;
   Map<String, dynamic> _stats = {};
 
   @override
@@ -22,14 +23,26 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
     try {
       final stats = await _supabaseService.getDashboardStats();
-      setState(() {
-        _stats = stats;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _stats = stats;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
+      debugPrint('Error loading analytics: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
     }
   }
 
@@ -45,38 +58,49 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : RefreshIndicator(
-                onRefresh: _loadData,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionTitle('نظرة عامة على الأداء الحقيقي'),
-                      _buildStatsCards(),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle('التقدم نحو الهدف الشهري'),
-                      _buildProgressSection(),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle('توزيع العقارات المتاحة بالسوق'),
-                      SizedBox(height: 300, child: _buildPieChart()),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle('رؤى السوق'),
-                      _buildMarketInsightsTable(),
-                      const SizedBox(height: 24),
-                      _buildMotivationCard(),
-                      const SizedBox(height: 40),
-                    ],
+            : _hasError
+                ? _buildErrorWidget()
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionTitle('نظرة عامة على الأداء الحقيقي'),
+                          _buildStatsCards(),
+                          const SizedBox(height: 24),
+                          _buildSectionTitle('التقدم نحو الهدف الشهري'),
+                          _buildProgressSection(),
+                          const SizedBox(height: 24),
+                          _buildSectionTitle('توزيع العقارات المتاحة بالسوق'),
+                          _buildPieChartSection(),
+                          const SizedBox(height: 24),
+                          _buildSectionTitle('رؤى السوق'),
+                          _buildMarketInsightsTable(),
+                          const SizedBox(height: 24),
+                          _buildMotivationCard(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {}, 
-          label: const Text('تحميل التقرير PDF'),
-          icon: const Icon(Icons.picture_as_pdf),
-          backgroundColor: AppColors.danger,
-        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 60, color: AppColors.danger),
+          const SizedBox(height: 16),
+          const Text('عذراً، حدث خطأ أثناء تحميل البيانات', style: TextStyle(fontSize: 18)),
+          const SizedBox(height: 16),
+          ElevatedButton(onPressed: _loadData, child: const Text('إعادة المحاولة')),
+        ],
       ),
     );
   }
@@ -125,9 +149,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildProgressSection() {
     double progress = 0.0;
     int totalProps = _stats['total_properties'] ?? 0;
-    if (totalProps > 0) {
-      progress = (totalProps / 10).clamp(0.0, 1.0); // Example: Goal is 10 listings
-    }
+    progress = (totalProps / 10).clamp(0.0, 1.0); 
     
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -164,52 +186,63 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildMarketInsightsTable() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: MaterialStateProperty.all(AppColors.primary.withOpacity(0.05)),
-          columns: const [
-            DataColumn(label: Text('نوع العقار', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('العدد المتاح', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
-          ],
-          rows: (_stats['distribution'] as Map<String, int>?)?.entries.map((e) => DataRow(cells: [
-            DataCell(Text(e.key)),
-            DataCell(Text(e.value.toString())),
-            const DataCell(Text('نشط', style: TextStyle(color: Colors.green))),
-          ])).toList() ?? [],
+  Widget _buildPieChartSection() {
+    final Map<String, int> dist = Map<String, int>.from(_stats['distribution'] ?? {});
+    if (dist.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Center(child: Text('لا توجد بيانات عقارات كافية للرسم البياني')),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 300,
+      child: PieChart(
+        PieChartData(
+          sectionsSpace: 2,
+          centerSpaceRadius: 40,
+          sections: dist.entries.map((e) {
+            final List<Color> colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple];
+            final color = colors[dist.keys.toList().indexOf(e.key) % colors.length];
+            return PieChartSectionData(
+              value: e.value.toDouble(),
+              title: '${e.key}\n(${e.value})',
+              color: color,
+              radius: 60,
+              titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  Widget _buildPieChart() {
-    final Map<String, int> dist = _stats['distribution'] as Map<String, int>? ?? {};
-    if (dist.isEmpty) return const Center(child: Text('لا توجد بيانات للعرض'));
-
-    final List<Color> colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple];
-    int colorIndex = 0;
-
-    return PieChart(
-      PieChartData(
-        sectionsSpace: 2,
-        centerSpaceRadius: 40,
-        sections: dist.entries.map((e) {
-          final color = colors[colorIndex % colors.length];
-          colorIndex++;
-          return PieChartSectionData(
-            value: e.value.toDouble(),
-            title: e.key,
-            color: color,
-            radius: 50,
-            titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-          );
-        }).toList(),
-      ),
+  Widget _buildMarketInsightsTable() {
+    final Map<String, int> dist = Map<String, int>.from(_stats['distribution'] ?? {});
+    
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: dist.isEmpty 
+          ? const Padding(padding: EdgeInsets.all(20), child: Center(child: Text('لا توجد بيانات حالياً')))
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: MaterialStateProperty.all(AppColors.primary.withOpacity(0.05)),
+                columns: const [
+                  DataColumn(label: Text('نوع العقار', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('العدد المتاح', style: TextStyle(fontWeight: FontWeight.bold))),
+                  DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
+                ],
+                rows: dist.entries.map((e) => DataRow(cells: [
+                  DataCell(Text(e.key)),
+                  DataCell(Text(e.value.toString())),
+                  const DataCell(Text('نشط', style: TextStyle(color: Colors.green))),
+                ])).toList(),
+              ),
+            ),
     );
   }
 
@@ -227,7 +260,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             Expanded(
               child: Text(
                 totalProps > 5 
-                  ? 'أداء رائع! عندك $totalProps  عقار نشط في السوق حالياً 🚀'
+                  ? 'أداء رائع! عندك $totalProps عقار نشط في السوق حالياً 🚀'
                   : 'البداية قوية! استمر في إضافة العقارات لزيادة فرص البيع 📈',
                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               ),
