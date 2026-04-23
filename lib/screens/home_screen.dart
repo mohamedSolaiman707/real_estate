@@ -35,6 +35,18 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchFeaturedProperties();
   }
 
+  // وظيفة لتنسيق العملة بشكل احترافي
+  String _formatBudget(double value) {
+    if (value >= 1000000) {
+      double millions = value / 1000000;
+      // لو الرقم صحيح (زي 1.0) يظهر "1" بس، لو فيه كسر (زي 1.5) يظهر "1.5"
+      String formatted = millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1);
+      return '$formatted مليون';
+    } else {
+      return '${(value / 1000).toInt()} ألف';
+    }
+  }
+
   Future<void> _fetchFeaturedProperties() async {
     try {
       final response = await _supabase
@@ -67,7 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _submitLead() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // طباعة البيانات للتأكد قبل الإرسال
         debugPrint('Submitting lead: $_name, $_phone');
         
         await _supabase.from('leads').insert({
@@ -95,7 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (e) {
         debugPrint('Supabase Insert Error: $e');
         if (mounted) {
-          // إظهار الخطأ الحقيقي للمساعدة في التشخيص
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('خطأ: ${e.toString()}')),
           );
@@ -255,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            Text('${AppStrings.budgetLabel}: ${(_budget/1000).toInt()} ألف ج.م', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('${AppStrings.budgetLabel}: ${_formatBudget(_budget)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold)),
             Slider(
               value: _budget,
               min: 100000,
