@@ -229,7 +229,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         'location': locationController.text.trim(),
                         'type': type,
                         'bedrooms': int.tryParse(roomsController.text) ?? 0,
-                        'bathrooms': int.tryParse(bathsController.text) ?? 0,
+                        'bathrooms': int.tryParse(bathroomsController.text) ?? 0,
                         'floor': int.tryParse(floorController.text) ?? 0,
                         'build_year': int.tryParse(yearController.text) ?? 0,
                         'roi': double.tryParse(roiController.text) ?? 0.0,
