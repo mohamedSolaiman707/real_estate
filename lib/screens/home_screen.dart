@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/colors.dart';
 import '../constants/strings.dart';
 import '../widgets/chatbot_widget.dart';
@@ -35,11 +36,24 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchFeaturedProperties();
   }
 
+  // وظيفة لفتح الواتساب
+  Future<void> _launchWhatsApp() async {
+    final Uri whatsappUri = Uri.parse("https://wa.me/201014250577?text=مرحبًا، أريد الاستفسار عن العقارات المتاحة");
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح واتساب، تأكد من تثبيت التطبيق')),
+        );
+      }
+    }
+  }
+
   // وظيفة لتنسيق العملة بشكل احترافي
   String _formatBudget(double value) {
     if (value >= 1000000) {
       double millions = value / 1000000;
-      // لو الرقم صحيح (زي 1.0) يظهر "1" بس، لو فيه كسر (زي 1.5) يظهر "1.5"
       String formatted = millions.toStringAsFixed(millions.truncateToDouble() == millions ? 0 : 1);
       return '$formatted مليون';
     } else {
@@ -79,8 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _submitLead() async {
     if (_formKey.currentState!.validate()) {
       try {
-        debugPrint('Submitting lead: $_name, $_phone');
-        
         await _supabase.from('leads').insert({
           'name': _name.trim(),
           'phone': _phone.trim(),
@@ -104,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _formKey.currentState!.reset();
         }
       } catch (e) {
-        debugPrint('Supabase Insert Error: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('خطأ: ${e.toString()}')),
@@ -151,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             FloatingActionButton(
               heroTag: 'whatsapp',
-              onPressed: () {}, 
+              onPressed: _launchWhatsApp, 
               backgroundColor: const Color(0xFF25D366),
               child: const Icon(Icons.chat, color: Colors.white),
             ),
