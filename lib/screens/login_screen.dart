@@ -76,48 +76,65 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text(_isLoginMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد'),
+          title: Text(
+            _isLoginMode ? 'لوحة تسجيل الدخول الإدارية' : 'إنشاء حساب جديد',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
           elevation: 0,
-          backgroundColor: Colors.transparent,
+          backgroundColor: AppColors.slateDark,
+          foregroundColor: Colors.white,
           centerTitle: true,
         ),
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 400),
+              constraints: const BoxConstraints(maxWidth: 420),
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  )
-                ],
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppColors.cardShadow,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    _isLoginMode ? Icons.lock_outline : Icons.person_add_outlined,
-                    size: 64,
-                    color: AppColors.primary,
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _isLoginMode ? Icons.lock_person_rounded : Icons.person_add_rounded,
+                      size: 48,
+                      color: AppColors.primary,
+                    ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Text(
-                    _isLoginMode ? 'مرحباً بك مجدداً' : 'انضم إلينا اليوم',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    _isLoginMode ? 'مرحباً بك مجدداً 💼' : 'انضم للنظام الإداري 🏢',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'شركة الحمد للعقارات – طنطا والقاهرة',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
                   TextField(
                     controller: _emailController,
                     decoration: const InputDecoration(
                       labelText: 'البريد الإلكتروني',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email_outlined),
+                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.primary),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -126,25 +143,33 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: true,
                     decoration: const InputDecoration(
                       labelText: 'كلمة المرور',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lock_outline),
+                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.primary),
                     ),
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: _isLoading ? null : _handleAuth,
                       child: _isLoading 
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          )
                         : Text(
-                            _isLoginMode ? 'دخول' : 'إنشاء حساب',
-                            style: const TextStyle(color: Colors.white, fontSize: 18),
+                            _isLoginMode ? 'دخول لوحة التحكم' : 'إنشاء حساب جديد',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                     ),
                   ),
@@ -157,9 +182,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                     child: Text(
                       _isLoginMode 
-                        ? 'ليس لديك حساب؟ سجل الآن' 
-                        : 'لديك حساب بالفعل؟ سجل دخولك',
-                      style: const TextStyle(color: AppColors.primary),
+                        ? 'ليس لديك حساب؟ سجل حساب جديد' 
+                        : 'لديك حساب بالفعل؟ تسجيل الدخول',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],

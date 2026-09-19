@@ -6,6 +6,8 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   file_selector_windows
   url_launcher_windows
+  video_player_win
+  webview_windows
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
