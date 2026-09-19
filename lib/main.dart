@@ -15,8 +15,8 @@ import 'constants/keys.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final supabaseUrl = Keys.supabaseUrl;
-  final supabaseAnonKey = Keys.supabaseAnonKey;
+  const supabaseUrl = Keys.supabaseUrl;
+  const supabaseAnonKey = Keys.supabaseAnonKey;
 
   try {
     await Supabase.initialize(
