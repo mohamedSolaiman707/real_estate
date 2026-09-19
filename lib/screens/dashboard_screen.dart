@@ -62,6 +62,18 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map && args.containsKey('initialTabIndex')) {
+      final index = args['initialTabIndex'] as int;
+      if (index >= 0 && index < 4) {
+        _tabController.animateTo(index);
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _tabController.dispose();
     super.dispose();

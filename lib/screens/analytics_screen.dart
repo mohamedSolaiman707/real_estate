@@ -93,6 +93,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                               delegate: SliverChildListDelegate([
                                 _buildKpiRibbonGrid(),
                                 const SizedBox(height: 28),
+                                _buildConversionFunnel(),
+                                const SizedBox(height: 28),
                                 _buildGeographicBreakdownSection(),
                                 const SizedBox(height: 28),
                                 _buildTargetProgressCard(),
@@ -100,8 +102,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                                 _buildInteractiveChartsGrid(),
                                 const SizedBox(height: 28),
                                 _buildMarketInsightsTable(),
-                                const SizedBox(height: 28),
-                                _buildMotivationBanner(),
                                 const SizedBox(height: 40),
                               ]),
                             ),
@@ -301,6 +301,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               bgAccent: const Color(0xFFECFDF5),
               trendTag: '+14.2% نمو',
               isPositiveTrend: true,
+              onTap: () => Navigator.pushNamed(context, '/dashboard', arguments: {'initialTabIndex': 3}),
             ),
             _buildExecutiveKpiCard(
               title: 'الصفقات المتوقعة',
@@ -311,6 +312,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               bgAccent: const Color(0xFFEEF2FF),
               trendTag: 'معدل مرتفع 🔥',
               isPositiveTrend: true,
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('سيتم عرض تفاصيل الصفقات المتوقعة قريباً'))
+              ),
             ),
             _buildExecutiveKpiCard(
               title: 'معاينات اليوم المجدولة',
@@ -321,6 +325,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               bgAccent: const Color(0xFFE0F2FE),
               trendTag: 'جاهزة الآن ⏱️',
               isPositiveTrend: true,
+              onTap: () => Navigator.pushNamed(context, '/dashboard', arguments: {'initialTabIndex': 2}),
             ),
             _buildExecutiveKpiCard(
               title: 'إجمالي العملاء والطلبات',
@@ -331,6 +336,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               bgAccent: const Color(0xFFFFFBEB),
               trendTag: 'نشط 🎯',
               isPositiveTrend: true,
+              onTap: () => Navigator.pushNamed(context, '/dashboard', arguments: {'initialTabIndex': 0}),
             ),
           ],
         );
@@ -347,9 +353,104 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     required Color bgAccent,
     required String trendTag,
     required bool isPositiveTrend,
+    VoidCallback? onTap,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: bgAccent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: accentColor, size: 20),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: accentColor.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        trendTag,
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    height: 1.1,
+                    letterSpacing: 0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── Conversion Funnel ──────────────────────────────────────────────────────
+  Widget _buildConversionFunnel() {
+    final int leads = (_stats['new_customers'] ?? 45) as int;
+    final int customers = (_stats['converted_customers'] ?? 12) as int;
+    final int tours = (_stats['tours_today'] ?? 5) as int;
+
+    return Container(
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -359,71 +460,102 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: bgAccent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: accentColor, size: 20),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  trendTag,
-                  style: TextStyle(
-                    color: accentColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Icon(Icons.filter_alt_rounded, color: AppColors.primary, size: 22),
+              SizedBox(width: 8),
+              Text(
+                'مسار تحويل المبيعات (Funnel) ⚡',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
           ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
-              height: 1.1,
-              letterSpacing: 0.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 24),
+          _buildFunnelStep(
+            label: 'إجمالي الطلبات (Leads)',
+            value: '$leads طلب',
+            percentage: 1.0,
+            color: const Color(0xFF6366F1),
           ),
-          const SizedBox(height: 6),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          _buildFunnelStep(
+            label: 'العملاء المهتمين (Customers)',
+            value: '$customers عميل',
+            percentage: leads > 0 ? (customers / leads).clamp(0.1, 1.0) : 0.4,
+            color: const Color(0xFF0EA5E9),
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          _buildFunnelStep(
+            label: 'المعاينات المنفذة (Tours)',
+            value: '$tours معاينة',
+            percentage: customers > 0 ? (tours / customers).clamp(0.1, 1.0) : 0.2,
+            color: const Color(0xFF10B981),
+            isLast: true,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildFunnelStep({
+    required String label,
+    required String value,
+    required double percentage,
+    required Color color,
+    bool isLast = false,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              flex: 4,
+              child: Text(
+                label,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+              ),
+            ),
+            Expanded(
+              flex: 6,
+              child: Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  Container(
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  FractionallySizedBox(
+                    widthFactor: percentage,
+                    child: Container(
+                      height: 34,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [color, color.withOpacity(0.8)]),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        value,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (!isLast)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Icon(Icons.arrow_drop_down, color: AppColors.textMuted.withOpacity(0.3), size: 20),
+          ),
+      ],
     );
   }
 
@@ -1058,9 +1190,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   // ─── Market Insights Data Table ─────────────────────────────────────────────
   Widget _buildMarketInsightsTable() {
-    final Map<String, int> dist =
-        Map<String, int>.from(_stats['distribution'] ?? {});
-
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -1075,11 +1204,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             padding: EdgeInsets.fromLTRB(20, 18, 20, 12),
             child: Row(
               children: [
-                Icon(Icons.table_chart_rounded,
-                    color: AppColors.primary, size: 20),
+                Icon(Icons.insights_rounded, color: AppColors.primary, size: 20),
                 SizedBox(width: 8),
                 Text(
-                  'تفاصيل فئات العقارات والطلب في السوق 📊',
+                  'تحليلات طلب السوق والعملاء 🎯',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1090,189 +1218,58 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             ),
           ),
           const Divider(height: 1, color: AppColors.border),
-          dist.isEmpty
-              ? const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(
-                    child: Text('لا توجد بيانات متاحة حالياً',
-                        style: TextStyle(color: AppColors.textMuted)),
-                  ),
-                )
-              : SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width > 700
-                        ? MediaQuery.of(context).size.width - 40
-                        : 650,
-                    child: DataTable(
-                      headingRowColor: WidgetStateProperty.all(
-                          const Color(0xFFF8FAFC)),
-                      dataRowMaxHeight: 52,
-                      columns: const [
-                        DataColumn(
-                          label: Text('نوع العقار',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary)),
-                        ),
-                        DataColumn(
-                          label: Text('عدد العقارات',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary)),
-                        ),
-                        DataColumn(
-                          label: Text('مستوى الطلب',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary)),
-                        ),
-                        DataColumn(
-                          label: Text('الحالة التشغيلية',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary)),
-                        ),
-                      ],
-                      rows: dist.entries.map((e) {
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              Row(
-                                children: [
-                                  const Icon(Icons.home_work_rounded,
-                                      size: 16, color: AppColors.primary),
-                                  const SizedBox(width: 8),
-                                  Text(e.key,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                            ),
-                            DataCell(Text('${e.value} وحدات')),
-                            DataCell(
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.warningBg,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                      color: AppColors.warning
-                                          .withOpacity(0.3)),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.local_fire_department_rounded,
-                                        size: 13, color: AppColors.warning),
-                                    SizedBox(width: 4),
-                                    Text('طلب عالٍ 🔥',
-                                        style: TextStyle(
-                                            color: AppColors.warning,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            DataCell(
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.successBg,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                      color: AppColors.success
-                                          .withOpacity(0.3)),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.check_circle_rounded,
-                                        size: 13, color: AppColors.success),
-                                    SizedBox(width: 4),
-                                    Text('نشط ومتاح',
-                                        style: TextStyle(
-                                            color: AppColors.success,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
+          
+          _buildInsightRow(
+            title: 'المناطق الأكثر طلباً',
+            items: [
+              {'label': 'طنطا - الاستاد', 'value': '42%', 'trend': '↑'},
+              {'label': 'القاهرة - التجمع', 'value': '35%', 'trend': '↑'},
+              {'label': 'طنطا - البحر', 'value': '15%', 'trend': '↓'},
+              {'label': 'الشيخ زايد', 'value': '8%', 'trend': '→'},
+            ],
+          ),
+          
+          const Divider(height: 1, color: AppColors.border),
+          
+          _buildInsightRow(
+            title: 'ميزانية العملاء الشائعة',
+            items: [
+              {'label': '1M - 2M ج.م', 'value': '55%', 'trend': '↑'},
+              {'label': '2M - 4M ج.م', 'value': '28%', 'trend': '→'},
+              {'label': 'فوق 5M ج.م', 'value': '12%', 'trend': '↑'},
+              {'label': 'أقل من 1M', 'value': '5%', 'trend': '↓'},
+            ],
+          ),
+          
+          const SizedBox(height: 12),
         ],
       ),
     );
   }
 
-  // ─── Motivation Banner ──────────────────────────────────────────────────────
-  Widget _buildMotivationBanner() {
-    final int totalProps = _stats['total_properties'] ?? 0;
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0EA5E9), Color(0xFF0284C7)],
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0EA5E9).withOpacity(0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
+  Widget _buildInsightRow({required String title, required List<Map<String, String>> items}) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.emoji_events_rounded,
-                size: 36, color: Colors.white),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+          const SizedBox(height: 12),
+          ...items.map((item) => Padding(
+            padding: const EdgeInsets.only(bottom: 10.0),
+            child: Row(
               children: [
-                Text(
-                  totalProps > 3
-                      ? 'أداء متميز في التغطية العقارية! 🚀'
-                      : 'فرصة رائعة لنمو الأرباح! 📈',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  totalProps > 3
-                      ? 'النظام يغطي $totalProps عقار نشط في طنطا والقاهرة حالياً بقيمة محفظة استثمارية تصاعدية.'
-                      : 'استمر في تعزيز عقارات طنطا والقاهرة لرفع نسبة تحويل العملاء وتحقيق أفضل أرباح.',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                    height: 1.3,
-                  ),
-                ),
+                Text(item['label']!, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                const Spacer(),
+                Text(item['value']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary)),
+                const SizedBox(width: 8),
+                Text(item['trend']!, style: TextStyle(
+                  color: item['trend'] == '↑' ? AppColors.success : (item['trend'] == '↓' ? AppColors.danger : AppColors.warning),
+                  fontWeight: FontWeight.bold,
+                )),
               ],
             ),
-          ),
+          )).toList(),
         ],
       ),
     );
