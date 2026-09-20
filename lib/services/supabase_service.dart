@@ -159,11 +159,14 @@ class SupabaseService {
 
   Future<bool> deleteProperty(String id) async {
     try {
+      // First, try to delete associated tours or nullify them if needed, 
+      // but usually we want to know why it fails.
       await _supabase.from('properties').delete().eq('id', id);
       return true;
     } catch (e) {
       debugPrint('Error deleting property: $e');
-      return false;
+      // Re-throw or handle so we can show the error to user
+      rethrow; 
     }
   }
 

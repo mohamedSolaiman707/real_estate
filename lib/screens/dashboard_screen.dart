@@ -6917,16 +6917,26 @@ class _DashboardScreenState extends State<DashboardScreen>
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () async {
-                Navigator.pop(context);
-                final ok = await _supabaseService.deleteProperty(prop.id);
-                if (ok) {
+                try {
+                  Navigator.pop(context);
+                  final ok = await _supabaseService.deleteProperty(prop.id);
+                  if (ok) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تم حذف العقار بنجاح 🗑️'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                    _loadDashboardData();
+                  }
+                } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('تم حذف العقار بنجاح 🗑️'),
-                      backgroundColor: AppColors.success,
+                    SnackBar(
+                      content: Text('عذراً، لم يتم الحذف: $e'),
+                      backgroundColor: AppColors.danger,
+                      duration: const Duration(seconds: 5),
                     ),
                   );
-                  _loadDashboardData();
                 }
               },
               child: const Text(
