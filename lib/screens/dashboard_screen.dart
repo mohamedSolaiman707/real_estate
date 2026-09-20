@@ -1895,7 +1895,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             child: Container(
-              width: 520,
+              width: MediaQuery.of(context).size.width > 700 ? 520 : MediaQuery.of(context).size.width * 0.95,
               padding: const EdgeInsets.all(24),
               child: SingleChildScrollView(
                 child: Column(
@@ -2278,7 +2278,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
             content: SizedBox(
-              width: 480,
+              width: MediaQuery.of(context).size.width > 700 ? 480 : MediaQuery.of(context).size.width,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -2478,7 +2478,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Container(
-            width: 480,
+            width: MediaQuery.of(context).size.width > 700 ? 480 : MediaQuery.of(context).size.width * 0.95,
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -3458,7 +3458,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       child: TextField(
                         onChanged: (val) => setState(() => _propertySearchQuery = val),
                         decoration: InputDecoration(
-                          hintText: 'ابحث باسم العقار، المنطقة، المالك، أو الكود...',
+                          hintText: MediaQuery.of(context).size.width > 600 ? 'ابحث باسم العقار، المنطقة، المالك، أو الكود...' : 'بحث عن عقار...',
                           prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
                           contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                           filled: true,
@@ -3486,19 +3486,24 @@ class _DashboardScreenState extends State<DashboardScreen>
                         size: 18,
                         color: _showAdvancedFilters ? Colors.white : AppColors.primary,
                       ),
-                      label: Text(
-                        _showAdvancedFilters ? 'فلاتر متقدمة ▴' : 'فلاتر متقدمة ▾',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color: _showAdvancedFilters ? Colors.white : AppColors.primary,
-                        ),
-                      ),
+                      label: MediaQuery.of(context).size.width > 700 
+                          ? Text(
+                              _showAdvancedFilters ? 'فلاتر متقدمة ▴' : 'فلاتر متقدمة ▾',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: _showAdvancedFilters ? Colors.white : AppColors.primary,
+                              ),
+                            )
+                          : const SizedBox.shrink(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _showAdvancedFilters ? AppColors.primary : AppColors.primary.withOpacity(0.1),
                         foregroundColor: _showAdvancedFilters ? Colors.white : AppColors.primary,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: MediaQuery.of(context).size.width > 700 ? 16 : 12,
+                          vertical: 14
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                           side: BorderSide(
@@ -4774,7 +4779,7 @@ ${prop.description}
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: const Text('ملاحظات وتحديثات العميل 📝', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             content: SizedBox(
-              width: 400,
+              width: MediaQuery.of(context).size.width > 600 ? 400 : MediaQuery.of(context).size.width,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,

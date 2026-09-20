@@ -1263,7 +1263,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         builder: (context, setModalState) => Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Container(
-            width: 480,
+            width: MediaQuery.of(context).size.width > 700 ? 480 : MediaQuery.of(context).size.width * 0.95,
             padding: const EdgeInsets.all(24),
             child: Form(
               key: formKey,
