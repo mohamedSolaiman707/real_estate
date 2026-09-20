@@ -871,9 +871,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Slider(
                       value: _budget,
-                      min: 200000,
+                      min: 1000000,
                       max: 15000000,
-                      divisions: 74,
+                      divisions: 70,
                       onChanged: (val) => setState(() => _budget = val),
                     ),
                   ),
@@ -882,7 +882,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: const [
-                        Text('200 ألف', style: TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                        Text('1 مليون', style: TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
                         Text('15 مليون', style: TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
                       ],
                     ),
