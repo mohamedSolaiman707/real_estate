@@ -1490,6 +1490,19 @@ class _DashboardScreenState extends State<DashboardScreen>
                     _customerTypeFilter == 'مشتري',
                     () => setState(() => _customerTypeFilter = 'مشتري'),
                   ),
+                  const Spacer(),
+                  ElevatedButton.icon(
+                    onPressed: _showAddCustomerDialog,
+                    icon: const Icon(Icons.person_add_rounded, size: 16),
+                    label: const Text('إضافة عميل', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -2436,6 +2449,269 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddCustomerDialog() {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final notesController = TextEditingController();
+    final budgetController = TextEditingController();
+    String selectedStatus = 'Warm';
+    String selectedType = 'مشتري'; // مشتري أو مالك
+    String selectedPropType = AppStrings.propertyTypes.first;
+    String selectedLocation = 'الكل';
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: StatefulBuilder(
+          builder: (context, setModalState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.person_add_alt_1_rounded, color: AppColors.primary),
+                SizedBox(width: 10),
+                Text('إضافة عميل يدوي 👤', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: SizedBox(
+              width: MediaQuery.of(context).size.width > 600 ? 500 : MediaQuery.of(context).size.width,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Quick Classification
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(color: AppColors.surfaceSubtle, borderRadius: BorderRadius.circular(12)),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ChoiceChip(
+                              label: const Center(child: Text('مشتري 💰')),
+                              selected: selectedType == 'مشتري',
+                              onSelected: (val) => setModalState(() => selectedType = 'مشتري'),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ChoiceChip(
+                              label: const Center(child: Text('مالك 🏠')),
+                              selected: selectedType == 'مالك',
+                              onSelected: (val) => setModalState(() => selectedType = 'مالك'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'اسم العميل الكامل', prefixIcon: Icon(Icons.person_outline)),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: phoneController,
+                      decoration: const InputDecoration(labelText: 'رقم الهاتف', prefixIcon: Icon(Icons.phone_android_rounded)),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        const Text('حالة الجدية:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        const SizedBox(width: 12),
+                        _buildStatusCircle('ساخن 🔥', 'Hot', Colors.red, selectedStatus, (s) => setModalState(() => selectedStatus = s)),
+                        const SizedBox(width: 8),
+                        _buildStatusCircle('مهتم ☀️', 'Warm', Colors.orange, selectedStatus, (s) => setModalState(() => selectedStatus = s)),
+                        const SizedBox(width: 8),
+                        _buildStatusCircle('بارد ❄️', 'Cold', Colors.blueGrey, selectedStatus, (s) => setModalState(() => selectedStatus = s)),
+                      ],
+                    ),
+                    if (selectedType == 'مشتري') ...[
+                      const Divider(height: 32),
+                      const Align(alignment: Alignment.centerRight, child: Text('متطلبات العميل (للمطابقة الذكية):', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 13))),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              value: selectedPropType,
+                              items: AppStrings.propertyTypes.map((t) => DropdownMenuItem(value: t, child: Text(t, style: const TextStyle(fontSize: 12)))).toList(),
+                              onChanged: (v) => setModalState(() => selectedPropType = v!),
+                              decoration: const InputDecoration(labelText: 'نوع العقار'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: TextField(
+                              controller: budgetController,
+                              decoration: const InputDecoration(labelText: 'الميزانية (ج.م)'),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedLocation,
+                        items: _allAvailableFolders.map((l) => DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 12)))).toList(),
+                        onChanged: (v) => setModalState(() => selectedLocation = v!),
+                        decoration: const InputDecoration(labelText: 'المنطقة المفضلة'),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(labelText: 'ملاحظات إضافية', hintText: 'سجل أي تفاصيل أخرى عن العميل...'),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                onPressed: isSaving ? null : () async {
+                  if (nameController.text.isEmpty || phoneController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('من فضلك ادخل الاسم والرقم'), backgroundColor: AppColors.warning));
+                    return;
+                  }
+                  setModalState(() => isSaving = true);
+                  try {
+                    final budget = int.tryParse(budgetController.text) ?? 0;
+                    final customer = await _supabaseService.addManualCustomer(
+                      name: nameController.text.trim() + (selectedType == 'مالك' ? ' (مالك)' : ''),
+                      phone: phoneController.text.trim(),
+                      status: selectedStatus,
+                      notes: notesController.text.trim(),
+                      propertyType: selectedType == 'مشتري' ? selectedPropType : null,
+                      location: selectedType == 'مشتري' ? selectedLocation : null,
+                      budget: budget > 0 ? budget : null,
+                      purpose: selectedType == 'مشتري' ? 'شراء' : 'بيع',
+                    );
+
+                    if (mounted) {
+                      Navigator.pop(context);
+                      _loadDashboardData();
+                      
+                      // ── Smart Matching Trigger ──
+                      if (selectedType == 'مشتري') {
+                        _showSmartMatchingResults(
+                          name: nameController.text.trim(),
+                          type: selectedPropType,
+                          location: selectedLocation,
+                          budget: budget,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة العميل بنجاح ✅'), backgroundColor: AppColors.success));
+                      }
+                    }
+                  } catch (e) {
+                    setModalState(() => isSaving = false);
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: AppColors.danger));
+                  }
+                },
+                child: isSaving 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('حفظ العميل'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCircle(String label, String value, Color color, String current, Function(String) onTap) {
+    final isSel = current == value;
+    return GestureDetector(
+      onTap: () => onTap(value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSel ? color.withOpacity(0.15) : AppColors.surfaceSubtle,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSel ? color : AppColors.border, width: 1.5),
+        ),
+        child: Text(label, style: TextStyle(fontSize: 11, fontWeight: isSel ? FontWeight.bold : FontWeight.normal, color: isSel ? color : AppColors.textMuted)),
+      ),
+    );
+  }
+
+  void _showSmartMatchingResults({required String name, required String type, required String location, required int budget}) {
+    final matches = _properties.where((p) {
+      if (p.status == 'مباع') return false;
+      bool typeMatch = p.type.contains(type) || type.contains(p.type);
+      bool locMatch = location == 'الكل' || p.location.contains(location) || p.folderName.contains(location);
+      bool budgetMatch = budget <= 0 || (p.price >= budget * 0.7 && p.price <= budget * 1.3);
+      return typeMatch && (locMatch || budgetMatch); // Relaxed matching for better UX
+    }).toList();
+
+    showDialog(
+      context: context,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Column(
+            children: [
+              const Icon(Icons.auto_awesome_rounded, color: Colors.amber, size: 40),
+              const SizedBox(height: 10),
+              Text('مطابقة ذكية للعميل: $name 🤖', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('إليك أفضل العقارات المناسبة لطلبه حالياً:', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+            ],
+          ),
+          content: matches.isEmpty
+              ? const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Text('لا توجد عقارات مطابقة تماماً في المخزن حالياً.', textAlign: TextAlign.center),
+                )
+              : SizedBox(
+                  width: 400,
+                  height: 350,
+                  child: ListView.builder(
+                    itemCount: matches.length,
+                    itemBuilder: (context, index) {
+                      final p = matches[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceSubtle,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: ListTile(
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(p.mainImage, width: 50, height: 50, fit: BoxFit.cover),
+                          ),
+                          title: Text(p.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), maxLines: 1),
+                          subtitle: Text('${p.formattedPrice} • ${p.location}', style: const TextStyle(fontSize: 11)),
+                          trailing: const Icon(Icons.arrow_back_ios_new_rounded, size: 14),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.pushNamed(context, '/property_details', arguments: p);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق')),
+            if (matches.isNotEmpty)
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('ممتاز، سأقوم بترشيحها له'),
+              ),
+          ],
         ),
       ),
     );

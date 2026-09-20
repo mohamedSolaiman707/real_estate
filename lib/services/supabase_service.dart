@@ -288,6 +288,44 @@ class SupabaseService {
     }
   }
 
+  Future<Map<String, dynamic>> addManualCustomer({
+    required String name,
+    required String phone,
+    String status = 'Warm',
+    String? notes,
+    String? propertyType,
+    String? location,
+    int? budget,
+    String? purpose,
+    String? source,
+  }) async {
+    try {
+      final response = await _supabase.from('customers').insert({
+        'name': name,
+        'phone': phone,
+        'status': status,
+        'notes': notes,
+        'property_type': propertyType,
+        'location': location,
+        'budget': budget,
+        'purpose': purpose,
+        'source': source ?? 'manual_entry',
+        'created_at': DateTime.now().toIso8601String(),
+      }).select().single();
+
+      await logCustomerInteraction(
+        customerId: response['id'],
+        type: 'creation',
+        notes: 'تم إضافة العميل يدوياً من لوحة التحكم',
+      );
+
+      return response;
+    } catch (e) {
+      debugPrint('Error adding manual customer: $e');
+      rethrow;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getCustomers({bool useCacheOnly = false}) async {
     final cacheKey = 'customers_list';
     if (useCacheOnly) {
