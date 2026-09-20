@@ -242,7 +242,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ),
                     padding: const EdgeInsets.all(4),
                     child: Image.asset(
-                      'assets/images/logo-hamd.png',
+                      'assets/images/hamd-logo1.png',
                       height: 32,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => const Icon(

@@ -373,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.asset(
-                    'assets/images/logo-hamd.png',
+                    'assets/images/hamd-logo1.png',
                     width: isDesktop ? 42 : 36,
                     height: isDesktop ? 42 : 36,
                     fit: BoxFit.contain,
