@@ -711,6 +711,17 @@ class _ChatBotWidgetState extends State<ChatBotWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    if (isMobile) {
+      return FloatingActionButton(
+        heroTag: 'chatbot',
+        onPressed: () => _showChat(context),
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.smart_toy_rounded, color: Colors.white),
+      );
+    }
+
     return FloatingActionButton.extended(
       heroTag: 'chatbot',
       onPressed: () => _showChat(context),

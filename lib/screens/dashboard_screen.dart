@@ -235,14 +235,21 @@ class _DashboardScreenState extends State<DashboardScreen>
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
               child: Row(
                 children: [
-                  Image.asset(
-                    'assets/images/logo-hamd.png',
-                    height: 28,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.business_center_rounded,
-                      color: AppColors.primary,
-                      size: 22,
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Image.asset(
+                      'assets/images/logo-hamd.png',
+                      height: 32,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.business_center_rounded,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
