@@ -3071,39 +3071,68 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ],
                       const SizedBox(height: 16),
                       if (type != 'أرض')
-                        Row(
-                          children: [
-                            Expanded(
-                                child: TextFormField(
-                                    controller: roomsController,
-                                    decoration: InputDecoration(
-                                        labelText: 'الغرف',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10))),
-                                    keyboardType: TextInputType.number)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: TextFormField(
-                                    controller: bathroomsController,
-                                    decoration: InputDecoration(
-                                        labelText: 'الحمامات',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10))),
-                                    keyboardType: TextInputType.number)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: TextFormField(
-                                    controller: floorController,
-                                    decoration: InputDecoration(
-                                        labelText: 'الدور',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10))),
-                                    keyboardType: TextInputType.number)),
-                          ],
-                        ),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: TextFormField(
+                                      controller: roomsController,
+                                      decoration: InputDecoration(
+                                          labelText: 'الغرف',
+                                          border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10))),
+                                      keyboardType: TextInputType.number)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: TextFormField(
+                                      controller: bathroomsController,
+                                      decoration: InputDecoration(
+                                          labelText: 'الحمامات',
+                                          border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10))),
+                                      keyboardType: TextInputType.number)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: TextFormField(
+                                      controller: floorController,
+                                      decoration: InputDecoration(
+                                          labelText: 'الدور',
+                                          border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10))),
+                                      keyboardType: TextInputType.number)),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(
+                              controller: roomsController,
+                              decoration: InputDecoration(
+                                  labelText: 'الغرف',
+                                  border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(10))),
+                              keyboardType: TextInputType.number),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                              controller: bathroomsController,
+                              decoration: InputDecoration(
+                                  labelText: 'الحمامات',
+                                  border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(10))),
+                              keyboardType: TextInputType.number),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                              controller: floorController,
+                              decoration: InputDecoration(
+                                  labelText: 'الدور',
+                                  border: OutlineInputBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(10))),
+                              keyboardType: TextInputType.number),
+                        ],
                       const SizedBox(height: 16),
                       if (isDesktop)
                         Row(
@@ -4523,15 +4552,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                         ],
                         const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(child: TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف', border: OutlineInputBorder()))),
-                            const SizedBox(width: 8),
-                            Expanded(child: TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder()))),
-                            const SizedBox(width: 8),
-                            Expanded(child: TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()))),
-                          ],
-                        ),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(child: TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف', border: OutlineInputBorder()))),
+                              const SizedBox(width: 8),
+                              Expanded(child: TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder()))),
+                              const SizedBox(width: 8),
+                              Expanded(child: TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()))),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف', border: OutlineInputBorder())),
+                          const SizedBox(height: 12),
+                          TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder())),
+                          const SizedBox(height: 12),
+                          TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder())),
+                        ],
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: descController,
