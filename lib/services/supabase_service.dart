@@ -159,13 +159,21 @@ class SupabaseService {
 
   Future<bool> deleteProperty(String id) async {
     try {
-      // First, try to delete associated tours or nullify them if needed, 
-      // but usually we want to know why it fails.
+      // Since you enabled CASCADE DELETE in tours, 
+      // we only need to handle tables that might not have it enabled yet.
+      
+      // 1. Try to nullify or delete associated leads if they prevent deletion
+      try {
+        await _supabase.from('leads').update({'form_data->selected_property_id': null}).eq('form_data->selected_property_id', id);
+      } catch (e) {
+        debugPrint('Note: No leads to unbind or table structure differs: $e');
+      }
+
+      // 2. Delete the property itself (Supabase will auto-delete tours via CASCADE)
       await _supabase.from('properties').delete().eq('id', id);
       return true;
     } catch (e) {
       debugPrint('Error deleting property: $e');
-      // Re-throw or handle so we can show the error to user
       rethrow; 
     }
   }
