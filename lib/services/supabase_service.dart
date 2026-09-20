@@ -67,6 +67,8 @@ class SupabaseService {
       roi: (json['roi'] as num?)?.toDouble() ?? 0.0,
       avgRent: (json['avg_rent'] as num?)?.toDouble() ?? 0.0,
       isForInvestment: json['purpose'] == 'استثمار' || (json['roi'] != null && (json['roi'] as num) > 0),
+      paymentMethod: json['payment_method'] ?? 'كاش',
+      targetPurpose: json['target_purpose'] ?? 'سكن شخصي',
       isFeatured: json['is_featured'] ?? false,
       videoUrl: json['video_url']?.toString() ?? '',
     );

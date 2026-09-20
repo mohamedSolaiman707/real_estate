@@ -19,6 +19,8 @@ class Property {
   final double roi;
   final double avgRent;
   final bool isForInvestment;
+  final String paymentMethod; // 'كاش' or 'تقسيط'
+  final String targetPurpose; // 'سكن شخصي' or 'استثمار'
   final bool isFeatured;
   final String videoUrl;
 
@@ -43,6 +45,8 @@ class Property {
     this.roi = 0.0,
     this.avgRent = 0.0,
     this.isForInvestment = false,
+    this.paymentMethod = 'كاش',
+    this.targetPurpose = 'سكن شخصي',
     this.isFeatured = false,
     this.videoUrl = '',
   });

@@ -2779,6 +2779,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     bool isSaving = false;
     List<PlatformFile> selectedFiles = [];
     String purpose = 'بيع';
+    String paymentMethod = 'كاش';
+    String targetPurpose = 'سكن شخصي';
     String status = 'متاح';
     String type = 'شقة';
     String finishing = AppStrings.finishingTypes.first;
@@ -2852,6 +2854,34 @@ class _DashboardScreenState extends State<DashboardScreen>
                             ),
                             const SizedBox(width: 12),
                             Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: Row(
+                                  children: [
+                                    const Text('الدفع:'),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text('كاش'),
+                                      selected: paymentMethod == 'كاش',
+                                      onSelected: (val) =>
+                                          setDialogState(() => paymentMethod = 'كاش'),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text('تقسيط'),
+                                      selected: paymentMethod == 'تقسيط',
+                                      onSelected: (val) =>
+                                          setDialogState(() => paymentMethod = 'تقسيط'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
                               child: DropdownButtonFormField<String>(
                                 value: status,
                                 items: AppStrings.propertyStatuses
@@ -2869,31 +2899,64 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ],
                         )
                       else ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(12)),
-                          child: Row(
-                            children: [
-                              const Text('الغرض:'),
-                              const SizedBox(width: 12),
-                              ChoiceChip(
-                                label: const Text('بيع'),
-                                selected: purpose == 'بيع',
-                                onSelected: (val) =>
-                                    setDialogState(() => purpose = 'بيع'),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: Row(
+                                  children: [
+                                    const Text('الغرض:'),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text('بيع'),
+                                      selected: purpose == 'بيع',
+                                      onSelected: (val) =>
+                                          setDialogState(() => purpose = 'بيع'),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text('إيجار'),
+                                      selected: purpose == 'إيجار',
+                                      onSelected: (val) =>
+                                          setDialogState(() => purpose = 'إيجار'),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(width: 8),
-                              ChoiceChip(
-                                label: const Text('إيجار'),
-                                selected: purpose == 'إيجار',
-                                onSelected: (val) =>
-                                    setDialogState(() => purpose = 'إيجار'),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: Row(
+                                  children: [
+                                    const Text('الدفع:'),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text('كاش'),
+                                      selected: paymentMethod == 'كاش',
+                                      onSelected: (val) =>
+                                          setDialogState(() => paymentMethod = 'كاش'),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    ChoiceChip(
+                                      label: const Text('تقسيط'),
+                                      selected: paymentMethod == 'تقسيط',
+                                      onSelected: (val) =>
+                                          setDialogState(() => paymentMethod = 'تقسيط'),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
@@ -2910,6 +2973,38 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   borderRadius: BorderRadius.circular(10))),
                         ),
                       ],
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.blue.withOpacity(0.2))),
+                              child: Row(
+                                children: [
+                                  const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                  const SizedBox(width: 12),
+                                  ChoiceChip(
+                                    label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
+                                    selected: targetPurpose == 'سكن شخصي',
+                                    onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  ChoiceChip(
+                                    label: const Text('استثمار', style: TextStyle(fontSize: 12)),
+                                    selected: targetPurpose == 'استثمار',
+                                    onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       const SizedBox(height: 16),
                       if (isDesktop)
                         Row(
@@ -3152,16 +3247,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                       if (isDesktop)
                         Row(
                           children: [
-                            Expanded(
-                                child: TextFormField(
-                                    controller: roiController,
-                                    decoration: InputDecoration(
-                                        labelText: 'العائد ROI %',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10))),
-                                    keyboardType: TextInputType.number)),
-                            const SizedBox(width: 12),
+                            if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                              Expanded(
+                                  child: TextFormField(
+                                      controller: roiController,
+                                      decoration: InputDecoration(
+                                          labelText: 'العائد ROI %',
+                                          border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10))),
+                                      keyboardType: TextInputType.number)),
+                            if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                              const SizedBox(width: 12),
                             Expanded(
                                 child: TextFormField(
                                     controller: yearController,
@@ -3174,14 +3271,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ],
                         )
                       else ...[
-                        TextFormField(
-                            controller: roiController,
-                            decoration: InputDecoration(
-                                labelText: 'العائد ROI %',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            keyboardType: TextInputType.number),
-                        const SizedBox(height: 12),
+                        if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                          TextFormField(
+                              controller: roiController,
+                              decoration: InputDecoration(
+                                  labelText: 'العائد ROI %',
+                                  border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10))),
+                              keyboardType: TextInputType.number),
+                        if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                          const SizedBox(height: 12),
                         TextFormField(
                             controller: yearController,
                             decoration: InputDecoration(
@@ -3331,6 +3430,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 DateTime.now().year,
                         'roi': double.tryParse(roiController.text) ?? 0.0,
                         'purpose': purpose,
+                        'payment_method': paymentMethod,
+                        'target_purpose': targetPurpose,
                         'amenities': selectedAmenities,
                         'images': imageUrls,
                         'finishing': finishing,
@@ -4332,6 +4433,8 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     bool isSaving = false;
     String purpose = prop.isForInvestment ? 'استثمار' : 'بيع';
+    String paymentMethod = prop.paymentMethod;
+    String targetPurpose = prop.targetPurpose;
     String status = prop.status;
     String type = prop.type;
     String finishing = prop.finishing;
@@ -4417,6 +4520,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       ),
                                     ),
                                   ),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                      child: Row(
+                                        children: [
+                                          const Text('الدفع:'),
+                                          const SizedBox(width: 12),
+                                          ChoiceChip(
+                                            label: const Text('كاش'),
+                                            selected: paymentMethod == 'كاش',
+                                            onSelected: (val) =>
+                                                setDialogState(() => paymentMethod = 'كاش'),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ChoiceChip(
+                                            label: const Text('تقسيط'),
+                                            selected: paymentMethod == 'تقسيط',
+                                            onSelected: (val) =>
+                                                setDialogState(() => paymentMethod = 'تقسيط'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: DropdownButtonFormField<String>(
@@ -4471,6 +4599,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 12),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                  child: Row(
+                                    children: [
+                                      const Text('الدفع:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('كاش'),
+                                        selected: paymentMethod == 'كاش',
+                                        onSelected: (val) =>
+                                            setDialogState(() => paymentMethod = 'كاش'),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('تقسيط'),
+                                        selected: paymentMethod == 'تقسيط',
+                                        onSelected: (val) =>
+                                            setDialogState(() => paymentMethod = 'تقسيط'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
                                   initialValue: [
                                     'متاح',
@@ -4491,6 +4644,37 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 ),
                               ],
                             const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
+                                    child: Row(
+                                      children: [
+                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                        const SizedBox(width: 12),
+                                        ChoiceChip(
+                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'سكن شخصي',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ChoiceChip(
+                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'استثمار',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
                             if (isDesktop)
                               Row(
                                 children: [
@@ -4510,6 +4694,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       onChanged: (val) =>
                                           setDialogState(() =>
                                       finishing = val!),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                      child: Row(
+                                        children: [
+                                          const Text('الدفع:'),
+                                          const SizedBox(width: 12),
+                                          ChoiceChip(
+                                            label: const Text('كاش'),
+                                            selected: paymentMethod == 'كاش',
+                                            onSelected: (val) =>
+                                                setDialogState(() => paymentMethod = 'كاش'),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ChoiceChip(
+                                            label: const Text('تقسيط'),
+                                            selected: paymentMethod == 'تقسيط',
+                                            onSelected: (val) =>
+                                                setDialogState(() => paymentMethod = 'تقسيط'),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -4554,6 +4763,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       setDialogState(() => finishing = val!),
                                 ),
                                 const SizedBox(height: 12),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                  child: Row(
+                                    children: [
+                                      const Text('الدفع:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('كاش'),
+                                        selected: paymentMethod == 'كاش',
+                                        onSelected: (val) =>
+                                            setDialogState(() => paymentMethod = 'كاش'),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('تقسيط'),
+                                        selected: paymentMethod == 'تقسيط',
+                                        onSelected: (val) =>
+                                            setDialogState(() => paymentMethod = 'تقسيط'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
                                   value: _customFolders.contains(folderName)
                                       ? folderName
@@ -4582,6 +4816,37 @@ class _DashboardScreenState extends State<DashboardScreen>
                               validator: (v) => v!.isEmpty ? 'مطلوب' : null,
                             ),
                             const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
+                                    child: Row(
+                                      children: [
+                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                        const SizedBox(width: 12),
+                                        ChoiceChip(
+                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'سكن شخصي',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ChoiceChip(
+                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'استثمار',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
                             if (isDesktop)
                               Row(
                                 children: [
@@ -4595,6 +4860,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       v!.isEmpty
                                           ? 'مطلوب'
                                           : null,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                      child: Row(
+                                        children: [
+                                          const Text('الدفع:'),
+                                          const SizedBox(width: 12),
+                                          ChoiceChip(
+                                            label: const Text('كاش'),
+                                            selected: paymentMethod == 'كاش',
+                                            onSelected: (val) =>
+                                                setDialogState(() => paymentMethod = 'كاش'),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ChoiceChip(
+                                            label: const Text('تقسيط'),
+                                            selected: paymentMethod == 'تقسيط',
+                                            onSelected: (val) =>
+                                                setDialogState(() => paymentMethod = 'تقسيط'),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -4637,6 +4927,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   validator: (v) => v!.isEmpty ? 'مطلوب' : null,
                                 ),
                                 const SizedBox(height: 12),
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                  child: Row(
+                                    children: [
+                                      const Text('الدفع:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('كاش'),
+                                        selected: paymentMethod == 'كاش',
+                                        onSelected: (val) =>
+                                            setDialogState(() => paymentMethod = 'كاش'),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('تقسيط'),
+                                        selected: paymentMethod == 'تقسيط',
+                                        onSelected: (val) =>
+                                            setDialogState(() => paymentMethod = 'تقسيط'),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
                                   initialValue: [
                                     'شقة',
@@ -4663,6 +4978,37 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       setDialogState(() => type = val!),
                                 ),
                               ],
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
+                                    child: Row(
+                                      children: [
+                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                        const SizedBox(width: 12),
+                                        ChoiceChip(
+                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'سكن شخصي',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ChoiceChip(
+                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'استثمار',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 12),
                             if (isDesktop)
                               Row(
@@ -4702,6 +5048,37 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       border: OutlineInputBorder()),
                                 ),
                               ],
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                    decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
+                                    child: Row(
+                                      children: [
+                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                        const SizedBox(width: 12),
+                                        ChoiceChip(
+                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'سكن شخصي',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ChoiceChip(
+                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
+                                          selected: targetPurpose == 'استثمار',
+                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 12),
                             if (isDesktop)
                               Row(
