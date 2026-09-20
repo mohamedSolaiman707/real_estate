@@ -7189,12 +7189,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                   Navigator.pop(context);
                   final ok = await _supabaseService.deleteProperty(prop.id);
                   if (ok) {
+                    // Update UI Instantly by removing from local list
+                    setState(() {
+                      _properties.removeWhere((p) => p.id == prop.id);
+                    });
+                    
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('تم حذف العقار بنجاح 🗑️'),
                         backgroundColor: AppColors.success,
                       ),
                     );
+                    // Refresh data in background to stay synced
                     _loadDashboardData();
                   }
                 } catch (e) {
