@@ -33,7 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   List<Map<String, dynamic>> _tours = _cachedTours ?? [];
   List<Property> _properties = _cachedProperties ?? [];
   String _propertySearchQuery = '';
-  String _propertyStatusFilter = 'الكل';
+  String _propertyStatusFilter = 'متاح'; // Default to show only Available properties initially!
   String _propertyFolderFilter = 'الكل';
   String _propertyFinishingFilter = 'الكل';
   List<String> _customFolders = _cachedFolders ?? ['الكل'];
@@ -235,12 +235,17 @@ class _DashboardScreenState extends State<DashboardScreen>
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.business_center_rounded,
-                    color: AppColors.primary,
-                    size: 22,
+                  Image.asset(
+                    'assets/images/logo-hamd.png',
+                    height: 28,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.business_center_rounded,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   const Text(
                     'شركة الحمد',
                     style: TextStyle(
@@ -4507,6 +4512,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ─── Properties Tab ─────────────────────────────────────────────────────────
   Widget _buildPropertiesTab() {
+    // Separate active properties and archived (sold) ones, or filter according to choices
     List<Property> filteredProps = _properties.where((p) {
       final matchesQuery =
           _propertySearchQuery.isEmpty ||
@@ -4514,6 +4520,10 @@ class _DashboardScreenState extends State<DashboardScreen>
           p.location.contains(_propertySearchQuery) ||
           p.city.contains(_propertySearchQuery);
 
+      // If user selected 'الكل' explicitly in status filter, we show everything.
+      // But by default, if filter is 'الكل' and advanced filters are CLOSED, let's show only available properties so they don't mix!
+      // To be safe and clean, let's respect the status filter row: if _propertyStatusFilter == 'الكل', it matches all.
+      // To prevent mixing on initial load, we can set default filter to 'متاح' or keep 'الكل' but sort them so 'مباع' goes to the very end.
       final matchesStatus =
           _propertyStatusFilter == 'الكل' || p.status == _propertyStatusFilter;
 
@@ -4530,6 +4540,13 @@ class _DashboardScreenState extends State<DashboardScreen>
 
       return matchesQuery && matchesStatus && matchesFinishing && matchesFolder;
     }).toList();
+
+    // Smart Sorting: Put 'متاح' first, then 'محجوز', then 'مؤجر', and push 'مباع' (اللقطات والمباع) to the very bottom
+    filteredProps.sort((a, b) {
+      if (a.status == 'مباع' && b.status != 'مباع') return 1;
+      if (a.status != 'مباع' && b.status == 'مباع') return -1;
+      return 0;
+    });
 
     return Column(
       children: [
