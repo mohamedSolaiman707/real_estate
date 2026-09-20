@@ -358,39 +358,23 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             children: [
               // High-end Logo & Branding
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.2),
-                      blurRadius: 10,
+              Image.asset(
+                'assets/images/hamd-logo1.png',
+                width: isDesktop ? 48 : 42,
+                height: isDesktop ? 48 : 42,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, Color(0xFF6366F1)],
                     ),
-                  ],
-                ),
-                padding: const EdgeInsets.all(4),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/images/hamd-logo1.png',
-                    width: isDesktop ? 42 : 36,
-                    height: isDesktop ? 42 : 36,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, Color(0xFF6366F1)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.apartment_rounded,
-                        color: Colors.white,
-                        size: isDesktop ? 20 : 18,
-                      ),
-                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.apartment_rounded,
+                    color: Colors.white,
+                    size: isDesktop ? 20 : 18,
                   ),
                 ),
               ),
