@@ -5066,14 +5066,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 ),
                               ),
                             ),
-                                  child: Icon(
-                                    Icons.business_rounded,
-                                    color: AppColors.textMuted,
-                                    size: 40,
-                                  ),
-                                ),
-                              ),
-                            ),
                           ),
                           // Status badge overlay top-right
                           Positioned(
