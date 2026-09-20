@@ -46,6 +46,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   String _customerSearchQuery = '';
   String _customerTypeFilter = 'الكل'; // 'الكل', 'مشتري', 'مالك'
 
+  // ─── Tour Tab States ──────────────────────────────────────────────────
+  String _tourSearchQuery = '';
+  String _tourStatusFilter =
+      'الكل'; // 'الكل', 'scheduled', 'completed', 'cancelled'
+
   List<String> get _allAvailableFolders {
     final set = <String>{'الكل'};
     set.addAll(_customFolders.where((f) => f != 'الكل'));
@@ -87,9 +92,14 @@ class _DashboardScreenState extends State<DashboardScreen>
     // 1. Instant Load from Persistent Cache (Stale)
     try {
       final cachedLeads = await _supabaseService.getLeads(useCacheOnly: true);
-      final cachedCustomers = await _supabaseService.getCustomers(useCacheOnly: true);
+      final cachedCustomers = await _supabaseService.getCustomers(
+        useCacheOnly: true,
+      );
       final cachedTours = await _supabaseService.getTours(useCacheOnly: true);
-      final cachedProps = await _supabaseService.getProperties(staffView: true, useCacheOnly: true);
+      final cachedProps = await _supabaseService.getProperties(
+        staffView: true,
+        useCacheOnly: true,
+      );
 
       if (mounted && cachedProps.isNotEmpty) {
         setState(() {
@@ -156,10 +166,15 @@ class _DashboardScreenState extends State<DashboardScreen>
       final fileName = '${DateTime.now().microsecondsSinceEpoch}.$extension';
       final path = 'property_images/$fileName';
       try {
-        await _supabase.storage.from('properties').uploadBinary(
+        await _supabase.storage
+            .from('properties')
+            .uploadBinary(
               path,
               file.bytes!,
-              fileOptions: FileOptions(contentType: 'image/$extension', upsert: true),
+              fileOptions: FileOptions(
+                contentType: 'image/$extension',
+                upsert: true,
+              ),
             );
         final url = _supabase.storage.from('properties').getPublicUrl(path);
         imageUrls.add(url);
@@ -207,8 +222,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget _buildTopBrandingAndKPIs() {
     final hotLeads = _leads.where((l) => l['converted'] != true).length;
     final convertedLeads = _leads.where((l) => l['converted'] == true).length;
-    final pendingTours =
-        _tours.where((t) => t['status'] == 'scheduled').length;
+    final pendingTours = _tours.where((t) => t['status'] == 'scheduled').length;
 
     return Container(
       color: AppColors.slateDark,
@@ -221,9 +235,12 @@ class _DashboardScreenState extends State<DashboardScreen>
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
               child: Row(
                 children: [
-                  const Icon(Icons.business_center_rounded,
-                      color: AppColors.primary, size: 22),
-                  const SizedBox(width: 12),
+                  const Icon(
+                    Icons.business_center_rounded,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                  SizedBox(width: 12),
                   const Text(
                     'شركة الحمد',
                     style: TextStyle(
@@ -235,11 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                   if (MediaQuery.of(context).size.width > 600) ...[
                     const SizedBox(width: 10),
-                    Container(
-                      width: 1,
-                      height: 16,
-                      color: Colors.white24,
-                    ),
+                    Container(width: 1, height: 16, color: Colors.white24),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
@@ -256,7 +269,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                   _buildHeaderIconButton(
                     icon: Icons.home_rounded,
                     tooltip: 'الرئيسية',
-                    onTap: () => Navigator.pushReplacementNamed(context, '/home'),
+                    onTap: () =>
+                        Navigator.pushReplacementNamed(context, '/home'),
                   ),
                   const SizedBox(width: 8),
                   _buildHeaderIconButton(
@@ -381,9 +395,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.slateDark,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFF1E293B), width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFF1E293B), width: 1)),
       ),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       alignment: Alignment.center,
@@ -420,10 +432,22 @@ class _DashboardScreenState extends State<DashboardScreen>
           padding: EdgeInsets.zero,
           labelPadding: EdgeInsets.symmetric(horizontal: isMobile ? 4 : 8),
           tabs: [
-            Tab(text: isMobile ? 'طلبات' : 'الطلبات (${_leads.where((l) => l['converted'] != true).length})'),
+            Tab(
+              text: isMobile
+                  ? 'طلبات'
+                  : 'الطلبات (${_leads.where((l) => l['converted'] != true).length})',
+            ),
             Tab(text: isMobile ? 'عملاء' : 'العملاء (${_customers.length})'),
-            Tab(text: isMobile ? 'معاينات' : 'المعاينات (${_tours.length})'),
-            Tab(text: isMobile ? 'عقارات' : 'العقارات (${_properties.length})'),
+            Tab(
+              text: isMobile
+                  ? 'معاينات'
+                  : 'المعاينات (${_tours.where((t) => t['status'] == 'scheduled').length})',
+            ),
+            Tab(
+              text: isMobile
+                  ? 'عقارات'
+                  : 'العقارات (${_properties.where((p) => p.status == 'متاح').length})',
+            ),
           ],
         ),
       ),
@@ -463,7 +487,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     bool isCompact = false,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 8 : 16,
+        vertical: 12,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -537,24 +564,18 @@ class _DashboardScreenState extends State<DashboardScreen>
         body: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return [
-              SliverToBoxAdapter(
-                child: _buildConnectivityBanner(),
-              ),
-              SliverToBoxAdapter(
-                child: _buildTopBrandingAndKPIs(),
-              ),
+              SliverToBoxAdapter(child: _buildConnectivityBanner()),
+              SliverToBoxAdapter(child: _buildTopBrandingAndKPIs()),
               SliverPersistentHeader(
                 pinned: true,
-                delegate: _SliverHeaderDelegate(
-                  child: _buildTabBarSection(),
-                ),
+                delegate: _SliverHeaderDelegate(child: _buildTabBarSection()),
               ),
             ];
           },
           body: _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(
-                      color: AppColors.primary))
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                )
               : TabBarView(
                   controller: _tabController,
                   children: [
@@ -571,9 +592,13 @@ class _DashboardScreenState extends State<DashboardScreen>
           elevation: 4,
           icon: const Icon(Icons.add_rounded, color: Colors.white),
           label: Text(
-            MediaQuery.of(context).size.width < 500 ? 'إضافة' : 'إضافة عقار جديد',
+            MediaQuery.of(context).size.width < 500
+                ? 'إضافة'
+                : 'إضافة عقار جديد',
             style: const TextStyle(
-                color: Colors.white, fontWeight: FontWeight.bold),
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -626,18 +651,22 @@ class _DashboardScreenState extends State<DashboardScreen>
     final purposeStr = formData['purpose']?.toString() ?? '';
     final rawName = (lead['name'] ?? 'عميل جديد') as String;
 
-    final isSellIntent = sourceStr.contains('sell') ||
+    final isSellIntent =
+        sourceStr.contains('sell') ||
         intentStr.contains('بيع') ||
         purposeStr.contains('بيع') ||
         rawName.contains('بيع') ||
         rawName.contains('عرض');
 
-    final isChatbot = sourceStr.contains('chatbot') ||
+    final isChatbot =
+        sourceStr.contains('chatbot') ||
         sourceStr.contains('ai_') ||
         sourceStr.contains('chat');
     final isConverted = lead['converted'] == true;
 
-    final displayName = (isSellIntent && (rawName == 'عميل محتمل (الشات الذكي)' || rawName.isEmpty))
+    final displayName =
+        (isSellIntent &&
+            (rawName == 'عميل محتمل (الشات الذكي)' || rawName.isEmpty))
         ? 'عرض عقار للبيع 💰 (مالك)'
         : rawName;
 
@@ -672,8 +701,15 @@ class _DashboardScreenState extends State<DashboardScreen>
       sourceIcon = Icons.language_rounded;
     }
 
-    final cleanType = (formData['property_type'] ?? '').toString().replaceAll('🏢', '').trim();
-    final cleanLoc = (formData['location'] ?? formData['region'] ?? '').toString().replaceAll('📍', '').replaceAll('🌐', '').trim();
+    final cleanType = (formData['property_type'] ?? '')
+        .toString()
+        .replaceAll('🏢', '')
+        .trim();
+    final cleanLoc = (formData['location'] ?? formData['region'] ?? '')
+        .toString()
+        .replaceAll('📍', '')
+        .replaceAll('🌐', '')
+        .trim();
 
     String summaryStr = '';
     if (cleanType.isNotEmpty) summaryStr += cleanType;
@@ -690,7 +726,9 @@ class _DashboardScreenState extends State<DashboardScreen>
       decoration: BoxDecoration(
         color: isConverted ? const Color(0xFFE2E8F0) : themeBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isConverted ? const Color(0xFFCBD5E1) : themeBorder),
+        border: Border.all(
+          color: isConverted ? const Color(0xFFCBD5E1) : themeBorder,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -744,17 +782,22 @@ class _DashboardScreenState extends State<DashboardScreen>
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: themeBorder,
-          width: isSellIntent ? 1.5 : 1.0,
-        ),
+        border: Border.all(color: themeBorder, width: isSellIntent ? 1.5 : 1.0),
         boxShadow: AppColors.cardShadow,
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 14, vertical: 6),
-          childrenPadding: EdgeInsets.fromLTRB(isMobile ? 10 : 14, 0, isMobile ? 10 : 14, 14),
+          tilePadding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 10 : 14,
+            vertical: 6,
+          ),
+          childrenPadding: EdgeInsets.fromLTRB(
+            isMobile ? 10 : 14,
+            0,
+            isMobile ? 10 : 14,
+            14,
+          ),
           leading: Container(
             width: isMobile ? 38 : 44,
             height: isMobile ? 38 : 44,
@@ -763,10 +806,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                 colors: isConverted
                     ? [const Color(0xFF94A3B8), const Color(0xFF64748B)]
                     : (isSellIntent
-                        ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
-                        : (isChatbot
-                            ? [const Color(0xFF6366F1), const Color(0xFF4F46E5)]
-                            : [const Color(0xFF10B981), const Color(0xFF059669)])),
+                          ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+                          : (isChatbot
+                                ? [
+                                    const Color(0xFF6366F1),
+                                    const Color(0xFF4F46E5),
+                                  ]
+                                : [
+                                    const Color(0xFF10B981),
+                                    const Color(0xFF059669),
+                                  ])),
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
@@ -774,11 +823,14 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
             child: Center(
               child: Text(
-                isSellIntent ? '💰' : (displayName.isNotEmpty ? displayName[0] : 'ع'),
+                isSellIntent
+                    ? '💰'
+                    : (displayName.isNotEmpty ? displayName[0] : 'ع'),
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
@@ -793,9 +845,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                     child: Text(
                       displayName,
                       style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: AppColors.textPrimary),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: AppColors.textPrimary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -819,17 +872,28 @@ class _DashboardScreenState extends State<DashboardScreen>
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const Icon(Icons.phone_rounded, size: 12, color: AppColors.textMuted),
+                  const Icon(
+                    Icons.phone_rounded,
+                    size: 12,
+                    color: AppColors.textMuted,
+                  ),
                   Text(
                     lead['phone']?.toString() ?? 'بدون رقم',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
                 summaryStr,
-                style: TextStyle(color: AppColors.textMuted, fontSize: isMobile ? 11 : 12),
+                style: TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: isMobile ? 11 : 12,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -843,14 +907,35 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: SizedBox(
                     height: 34,
                     child: OutlinedButton.icon(
-                      onPressed: () => _openWhatsApp(lead['phone'], lead['name'] ?? 'عميلنا'),
-                      icon: const Icon(Icons.chat_rounded, size: 14, color: Color(0xFF25D366)),
-                      label: const Text('واتساب', style: TextStyle(fontSize: 11, color: Color(0xFF128C7E), fontWeight: FontWeight.bold)),
+                      onPressed: () => _openWhatsApp(
+                        lead['phone'],
+                        lead['name'] ?? 'عميلنا',
+                      ),
+                      icon: const Icon(
+                        Icons.chat_rounded,
+                        size: 14,
+                        color: Color(0xFF25D366),
+                      ),
+                      label: const Text(
+                        'واتساب',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF128C7E),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        side: const BorderSide(color: Color(0xFF25D366), width: 1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        backgroundColor: const Color(0xFF25D366).withOpacity(0.05),
+                        side: const BorderSide(
+                          color: Color(0xFF25D366),
+                          width: 1,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        backgroundColor: const Color(
+                          0xFF25D366,
+                        ).withOpacity(0.05),
                       ),
                     ),
                   ),
@@ -861,12 +946,28 @@ class _DashboardScreenState extends State<DashboardScreen>
                     height: 34,
                     child: OutlinedButton.icon(
                       onPressed: () => _makePhoneCall(lead['phone']),
-                      icon: const Icon(Icons.phone_rounded, size: 14, color: AppColors.secondary),
-                      label: const Text('اتصال مباشر', style: TextStyle(fontSize: 11, color: AppColors.secondary, fontWeight: FontWeight.bold)),
+                      icon: const Icon(
+                        Icons.phone_rounded,
+                        size: 14,
+                        color: AppColors.secondary,
+                      ),
+                      label: const Text(
+                        'اتصال مباشر',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        side: const BorderSide(color: AppColors.secondary, width: 1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 1,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         backgroundColor: AppColors.secondary.withOpacity(0.05),
                       ),
                     ),
@@ -876,7 +977,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ),
           children: [
-            const Divider(height: 16, color: AppColors.border),
+            Divider(height: 16, color: AppColors.border),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -884,21 +985,26 @@ class _DashboardScreenState extends State<DashboardScreen>
                   Row(
                     children: [
                       Icon(
-                        isSellIntent ? Icons.real_estate_agent_rounded : Icons.person_pin_rounded,
+                        isSellIntent
+                            ? Icons.real_estate_agent_rounded
+                            : Icons.person_pin_rounded,
                         size: 15,
                         color: themePrimary,
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: 6),
                       Text(
-                        isSellIntent ? 'تفاصيل طلب عرض العقار (مالك العقار):' : 'تفاصيل اهتمام العميل:',
+                        isSellIntent
+                            ? 'تفاصيل طلب عرض العقار (مالك العقار):'
+                            : 'تفاصيل اهتمام العميل:',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            color: themePrimary),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: themePrimary,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
@@ -914,44 +1020,74 @@ class _DashboardScreenState extends State<DashboardScreen>
                         if (isSellIntent) ...[
                           Row(
                             children: [
-                              Icon(Icons.home_work_rounded, size: 15, color: themePrimary),
-                              const SizedBox(width: 6),
+                              Icon(
+                                Icons.home_work_rounded,
+                                size: 15,
+                                color: themePrimary,
+                              ),
+                              SizedBox(width: 6),
                               Text(
                                 'نوع العقار: ${formData['property_type']?.toString().replaceAll('🏢', '').trim().isEmpty ?? true ? "شقة / عقار" : formData['property_type'].toString().replaceAll('🏢', '').trim()}',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: themeText),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(Icons.location_on_rounded, size: 15, color: themePrimary),
-                              const SizedBox(width: 6),
-                              Text(
-                                'الموقع / المنطقة: ${(formData['location'] ?? formData['region'] ?? '').toString().replaceAll('📍', '').replaceAll('🌐', '').trim().isEmpty ? "طنطا/القاهرة" : (formData['location'] ?? formData['region']).toString().replaceAll('📍', '').replaceAll('🌐', '').trim()}',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: themeText),
-                              ),
-                            ],
-                          ),
-                        ] else if (formData['selected_property_title'] != null) ...[
-                          Row(
-                            children: [
-                              const Icon(Icons.apartment_rounded, size: 15, color: AppColors.primary),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'العقار المطلوب: ${formData['selected_property_title']}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.textPrimary),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: themeText,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.location_on_rounded,
+                                size: 15,
+                                color: themePrimary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'الموقع / المنطقة: ${(formData['location'] ?? formData['region'] ?? '').toString().replaceAll('📍', '').replaceAll('🌐', '').trim().isEmpty ? "طنطا/القاهرة" : (formData['location'] ?? formData['region']).toString().replaceAll('📍', '').replaceAll('🌐', '').trim()}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: themeText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else if (formData['selected_property_title'] !=
+                            null) ...[
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.apartment_rounded,
+                                size: 15,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'العقار المطلوب: ${formData['selected_property_title']}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4),
                         ],
-                        if (formData['chat_summary'] != null && !formData['chat_summary'].toString().contains('العميل مهتم بـ')) ...[
-                          const SizedBox(height: 4),
+                        if (formData['chat_summary'] != null &&
+                            !formData['chat_summary'].toString().contains(
+                              'العميل مهتم بـ',
+                            )) ...[
+                          SizedBox(height: 4),
                           _buildInfoRow(
-                            isSellIntent ? Icons.task_alt_rounded : Icons.chat_bubble_outline_rounded,
+                            isSellIntent
+                                ? Icons.task_alt_rounded
+                                : Icons.chat_bubble_outline_rounded,
                             formData['chat_summary'].toString(),
                           ),
                         ],
@@ -960,11 +1096,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                   Builder(
                     builder: (context) {
-                      final cleanLoc = (formData['location'] ?? formData['region'] ?? '')
-                          .toString()
-                          .replaceAll('📍', '')
-                          .replaceAll('🌐', '')
-                          .trim();
+                      final cleanLoc =
+                          (formData['location'] ?? formData['region'] ?? '')
+                              .toString()
+                              .replaceAll('📍', '')
+                              .replaceAll('🌐', '')
+                              .trim();
                       final cleanType = (formData['property_type'] ?? '')
                           .toString()
                           .replaceAll('🏢', '')
@@ -976,12 +1113,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                           if (isSellIntent)
                             _buildDetailBadge('🏷️', 'عرض للبيع (مالك)')
                           else if (formData['purpose'] != null)
-                            _buildDetailBadge('🎯', formData['purpose'].toString()),
+                            _buildDetailBadge(
+                              '🎯',
+                              formData['purpose'].toString(),
+                            ),
                           if (cleanType.isNotEmpty)
                             _buildDetailBadge('🏠', cleanType),
                           if (cleanLoc.isNotEmpty)
                             _buildDetailBadge('📍', cleanLoc),
-                          if (formData['budget'] != null && formData['budget'].toString().isNotEmpty && !isSellIntent)
+                          if (formData['budget'] != null &&
+                              formData['budget'].toString().isNotEmpty &&
+                              !isSellIntent)
                             _buildDetailBadge('💰', '${formData['budget']}'),
                           if (formData['rooms'] != null)
                             _buildDetailBadge('🚪', '${formData['rooms']} غرف'),
@@ -989,7 +1131,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       );
                     },
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                 ],
                 if (!isConverted)
                   SizedBox(
@@ -1004,7 +1146,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
                 // ─── Smart Property Matching (AI Feature) ────────────────────
                 if (!isSellIntent && !isConverted) ...[
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
@@ -1031,25 +1173,35 @@ class _DashboardScreenState extends State<DashboardScreen>
                         const SizedBox(height: 10),
                         Builder(
                           builder: (context) {
-                            final budgetStr = formData['budget']?.toString() ?? '';
-                            final targetBudget = _parseArabicPrice(budgetStr).toDouble();
-                            final targetRooms = int.tryParse(formData['rooms']?.toString() ?? '') ?? 0;
-                            
+                            final budgetStr =
+                                formData['budget']?.toString() ?? '';
+                            final targetBudget = _parseArabicPrice(
+                              budgetStr,
+                            ).toDouble();
+                            final targetRooms =
+                                int.tryParse(
+                                  formData['rooms']?.toString() ?? '',
+                                ) ??
+                                0;
+
                             final matchedProperties = _properties.where((p) {
                               if (p.status == 'مباع') return false;
 
                               // Type Match
                               bool typeMatch = true;
                               if (cleanType.isNotEmpty) {
-                                typeMatch = p.type.contains(cleanType) || cleanType.contains(p.type);
+                                typeMatch =
+                                    p.type.contains(cleanType) ||
+                                    cleanType.contains(p.type);
                               }
 
                               // Location Match
                               bool locMatch = true;
                               if (cleanLoc.isNotEmpty) {
-                                locMatch = p.location.contains(cleanLoc) || 
-                                          p.city.contains(cleanLoc) || 
-                                          cleanLoc.contains(p.location);
+                                locMatch =
+                                    p.location.contains(cleanLoc) ||
+                                    p.city.contains(cleanLoc) ||
+                                    cleanLoc.contains(p.location);
                               }
 
                               // Budget Match (+/- 30%)
@@ -1057,7 +1209,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                               if (targetBudget > 0) {
                                 final minB = targetBudget * 0.7;
                                 final maxB = targetBudget * 1.3;
-                                budgetMatch = p.price >= minB && p.price <= maxB;
+                                budgetMatch =
+                                    p.price >= minB && p.price <= maxB;
                               }
 
                               return typeMatch && locMatch && budgetMatch;
@@ -1083,8 +1236,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 children: matchedProperties.map((p) {
                                   return GestureDetector(
                                     onTap: () => Navigator.pushNamed(
-                                      context, 
-                                      '/property_details', 
+                                      context,
+                                      '/property_details',
                                       arguments: p,
                                     ),
                                     child: Container(
@@ -1095,33 +1248,44 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.05),
+                                            color: Colors.black.withOpacity(
+                                              0.05,
+                                            ),
                                             blurRadius: 4,
                                             offset: const Offset(0, 2),
                                           ),
                                         ],
                                       ),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           ClipRRect(
-                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                            borderRadius:
+                                                const BorderRadius.vertical(
+                                                  top: Radius.circular(12),
+                                                ),
                                             child: Image.network(
                                               p.mainImage,
                                               height: 80,
                                               width: double.infinity,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (c, e, s) => Container(
-                                                height: 80,
-                                                color: Colors.grey[200],
-                                                child: const Icon(Icons.home_work, color: Colors.grey),
-                                              ),
+                                              errorBuilder: (c, e, s) =>
+                                                  Container(
+                                                    height: 80,
+                                                    color: Colors.grey[200],
+                                                    child: const Icon(
+                                                      Icons.home_work,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
                                             ),
                                           ),
                                           Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   p.title,
@@ -1130,7 +1294,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 const SizedBox(height: 2),
                                                 Text(
@@ -1157,7 +1322,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ),
                   ),
                 ],
-
               ],
             ),
           ],
@@ -1174,9 +1338,14 @@ class _DashboardScreenState extends State<DashboardScreen>
         Icon(icon, size: isMobile ? 14 : 16, color: AppColors.primary),
         const SizedBox(width: 8),
         Expanded(
-            child: Text(text,
-                style:
-                    TextStyle(fontSize: isMobile ? 12 : 13, color: Colors.black87))),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: isMobile ? 12 : 13,
+              color: Colors.black87,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -1212,11 +1381,14 @@ class _DashboardScreenState extends State<DashboardScreen>
             children: [
               Icon(icon, color: color, size: 16),
               const SizedBox(width: 6),
-              Text(label,
-                  style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12)),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),
@@ -1230,16 +1402,21 @@ class _DashboardScreenState extends State<DashboardScreen>
       final name = (c['name'] ?? '').toString().toLowerCase();
       final phone = (c['phone'] ?? '').toString();
       final notes = (c['notes'] ?? '').toString().toLowerCase();
-      
-      final matchesSearch = _customerSearchQuery.isEmpty || 
-          name.contains(_customerSearchQuery.toLowerCase()) || 
+
+      final matchesSearch =
+          _customerSearchQuery.isEmpty ||
+          name.contains(_customerSearchQuery.toLowerCase()) ||
           phone.contains(_customerSearchQuery);
 
-      bool isSeller = name.contains('مالك') || name.contains('بيع') || 
-                      notes.contains('مالك') || notes.contains('عرض عقاره');
-      
-      final matchesType = _customerTypeFilter == 'الكل' || 
-          (_customerTypeFilter == 'مالك' && isSeller) || 
+      bool isSeller =
+          name.contains('مالك') ||
+          name.contains('بيع') ||
+          notes.contains('مالك') ||
+          notes.contains('عرض عقاره');
+
+      final matchesType =
+          _customerTypeFilter == 'الكل' ||
+          (_customerTypeFilter == 'مالك' && isSeller) ||
           (_customerTypeFilter == 'مشتري' && !isSeller);
 
       return matchesSearch && matchesType;
@@ -1263,23 +1440,51 @@ class _DashboardScreenState extends State<DashboardScreen>
                 onChanged: (val) => setState(() => _customerSearchQuery = val),
                 decoration: InputDecoration(
                   hintText: 'بحث في العملاء بالاسم أو الرقم...',
-                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: AppColors.primary,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
+                  ),
                   filled: true,
                   fillColor: AppColors.surfaceSubtle,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Row(
                 children: [
-                  const Text('تصنيف:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textSecondary)),
-                  const SizedBox(width: 12),
-                  _buildMiniFilterChip('الكل', _customerTypeFilter == 'الكل', () => setState(() => _customerTypeFilter = 'الكل')),
-                  const SizedBox(width: 8),
-                  _buildMiniFilterChip('ملاك 🏠', _customerTypeFilter == 'مالك', () => setState(() => _customerTypeFilter = 'مالك')),
-                  const SizedBox(width: 8),
-                  _buildMiniFilterChip('مشترين 💰', _customerTypeFilter == 'مشتري', () => setState(() => _customerTypeFilter = 'مشتري')),
+                  const Text(
+                    'تصنيف:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  _buildMiniFilterChip(
+                    'الكل',
+                    _customerTypeFilter == 'الكل',
+                    () => setState(() => _customerTypeFilter = 'الكل'),
+                  ),
+                  SizedBox(width: 8),
+                  _buildMiniFilterChip(
+                    'ملاك 🏠',
+                    _customerTypeFilter == 'مالك',
+                    () => setState(() => _customerTypeFilter = 'مالك'),
+                  ),
+                  SizedBox(width: 8),
+                  _buildMiniFilterChip(
+                    'مشترين 💰',
+                    _customerTypeFilter == 'مشتري',
+                    () => setState(() => _customerTypeFilter = 'مشتري'),
+                  ),
                 ],
               ),
             ],
@@ -1307,13 +1512,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                           mainAxisExtent: 260,
                         ),
                         itemCount: filteredCustomers.length,
-                        itemBuilder: (context, index) => _buildCustomerCard(filteredCustomers[index]),
+                        itemBuilder: (context, index) =>
+                            _buildCustomerCard(filteredCustomers[index]),
                       );
                     }
                     return ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
                       itemCount: filteredCustomers.length,
-                      itemBuilder: (context, index) => _buildCustomerCard(filteredCustomers[index]),
+                      itemBuilder: (context, index) =>
+                          _buildCustomerCard(filteredCustomers[index]),
                     );
                   },
                 ),
@@ -1322,7 +1529,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildMiniFilterChip(String label, bool isSelected, VoidCallback onTap) {
+  Widget _buildMiniFilterChip(
+    String label,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -1331,7 +1542,9 @@ class _DashboardScreenState extends State<DashboardScreen>
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : AppColors.surfaceSubtle,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+          ),
         ),
         child: Text(
           label,
@@ -1351,8 +1564,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     final notes = (cust['notes'] ?? '').toString();
     final initial = name.isNotEmpty ? name[0] : 'ع';
 
-    bool isSeller = name.contains('مالك') || name.contains('بيع') || 
-                    notes.contains('مالك') || notes.contains('عرض عقاره');
+    bool isSeller =
+        name.contains('مالك') ||
+        name.contains('بيع') ||
+        notes.contains('مالك') ||
+        notes.contains('عرض عقاره');
 
     final statusData = {
       'Hot': {
@@ -1360,21 +1576,21 @@ class _DashboardScreenState extends State<DashboardScreen>
         'bg': const Color(0xFFFEF2F2),
         'border': const Color(0xFFFCA5A5),
         'emoji': '🔥',
-        'label': 'متحمس جداً'
+        'label': 'متحمس جداً',
       },
       'Warm': {
         'color': const Color(0xFFF59E0B), // Amber Yellow
         'bg': const Color(0xFFFFFBEB),
         'border': const Color(0xFFFDE68A),
         'emoji': '☀️',
-        'label': 'مهتم'
+        'label': 'مهتم',
       },
       'Cold': {
         'color': const Color(0xFF64748B), // Slate Gray
         'bg': const Color(0xFFF8FAFC),
         'border': const Color(0xFFE2E8F0),
         'emoji': '❄️',
-        'label': 'متابعة عادية'
+        'label': 'متابعة عادية',
       },
     };
     final sd = statusData[status] ?? statusData['Cold']!;
@@ -1387,7 +1603,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isSeller ? const Color(0xFFD97706) : themeBorder, width: isSeller ? 1.5 : 1.0),
+        border: Border.all(
+          color: isSeller ? const Color(0xFFD97706) : themeBorder,
+          width: isSeller ? 1.5 : 1.0,
+        ),
         boxShadow: [
           BoxShadow(
             color: themeColor.withOpacity(0.04),
@@ -1410,9 +1629,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                   height: 44,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: isSeller 
-                        ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
-                        : [themeColor.withOpacity(0.8), themeColor],
+                      colors: isSeller
+                          ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+                          : [themeColor.withOpacity(0.8), themeColor],
                       begin: Alignment.topRight,
                       end: Alignment.bottomLeft,
                     ),
@@ -1451,23 +1670,40 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                           if (isSeller)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFFBEB),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color(0xFFFCD34D)),
+                                border: Border.all(
+                                  color: const Color(0xFFFCD34D),
+                                ),
                               ),
-                              child: const Text('مالك', style: TextStyle(fontSize: 9, color: Color(0xFF92400E), fontWeight: FontWeight.bold)),
+                              child: const Text(
+                                'مالك',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Color(0xFF92400E),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: themeBg,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: themeBorder.withOpacity(0.5)),
+                          border: Border.all(
+                            color: themeBorder.withOpacity(0.5),
+                          ),
                         ),
                         child: Text(
                           '${sd['emoji']} ${sd['label']}',
@@ -1486,11 +1722,15 @@ class _DashboardScreenState extends State<DashboardScreen>
             const SizedBox(height: 12),
             const Divider(height: 1, color: AppColors.borderLight),
             const SizedBox(height: 12),
-            
+
             // Contact Info
             Row(
               children: [
-                const Icon(Icons.phone_rounded, size: 14, color: AppColors.textMuted),
+                const Icon(
+                  Icons.phone_rounded,
+                  size: 14,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   cust['phone']?.toString() ?? 'بدون رقم',
@@ -1508,11 +1748,16 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.sticky_note_2_outlined, size: 14, color: AppColors.primary),
+                  const Icon(
+                    Icons.sticky_note_2_outlined,
+                    size: 14,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      (cust['notes'] != null && cust['notes'].toString().isNotEmpty)
+                      (cust['notes'] != null &&
+                              cust['notes'].toString().isNotEmpty)
                           ? cust['notes'].toString()
                           : 'لا توجد ملاحظات مسجلة للعميل حتى الآن...',
                       style: const TextStyle(
@@ -1536,17 +1781,33 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: SizedBox(
                     height: 36,
                     child: OutlinedButton.icon(
-                      onPressed: () => _openWhatsApp(cust['phone'], cust['name']),
-                      icon: const Icon(Icons.chat_rounded, size: 14, color: Color(0xFF25D366)),
+                      onPressed: () =>
+                          _openWhatsApp(cust['phone'], cust['name']),
+                      icon: const Icon(
+                        Icons.chat_rounded,
+                        size: 14,
+                        color: Color(0xFF25D366),
+                      ),
                       label: const Text(
                         'واتساب',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF128C7E), fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF128C7E),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        side: const BorderSide(color: Color(0xFF25D366), width: 1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        backgroundColor: const Color(0xFF25D366).withOpacity(0.05),
+                        side: const BorderSide(
+                          color: Color(0xFF25D366),
+                          width: 1,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        backgroundColor: const Color(
+                          0xFF25D366,
+                        ).withOpacity(0.05),
                       ),
                     ),
                   ),
@@ -1557,15 +1818,28 @@ class _DashboardScreenState extends State<DashboardScreen>
                     height: 36,
                     child: OutlinedButton.icon(
                       onPressed: () => _makePhoneCall(cust['phone']),
-                      icon: const Icon(Icons.phone_rounded, size: 14, color: AppColors.secondary),
+                      icon: const Icon(
+                        Icons.phone_rounded,
+                        size: 14,
+                        color: AppColors.secondary,
+                      ),
                       label: const Text(
                         'اتصال',
-                        style: TextStyle(fontSize: 11, color: AppColors.secondary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.secondary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.zero,
-                        side: const BorderSide(color: AppColors.secondary, width: 1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: const BorderSide(
+                          color: AppColors.secondary,
+                          width: 1,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         backgroundColor: AppColors.secondary.withOpacity(0.05),
                       ),
                     ),
@@ -1577,16 +1851,26 @@ class _DashboardScreenState extends State<DashboardScreen>
                     height: 36,
                     child: ElevatedButton.icon(
                       onPressed: () => _showEditCustomerNotesDialog(cust),
-                      icon: const Icon(Icons.edit_note_rounded, size: 14, color: Colors.white),
+                      icon: const Icon(
+                        Icons.edit_note_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      ),
                       label: const Text(
                         'ملاحظات',
-                        style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.zero,
                         backgroundColor: AppColors.primary,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -1620,6 +1904,36 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ─── Tours Tab ───────────────────────────────────────────────────────────────
   Widget _buildToursTab() {
+    // 1. Sort tours by date (Upcoming first)
+    final sortedTours = List<Map<String, dynamic>>.from(_tours);
+    sortedTours.sort((a, b) {
+      final da =
+          DateTime.tryParse(a['scheduled_date']?.toString() ?? '') ??
+          DateTime(2099);
+      final db =
+          DateTime.tryParse(b['scheduled_date']?.toString() ?? '') ??
+          DateTime(2099);
+      return da.compareTo(db);
+    });
+
+    // 2. Filter tours based on search and status
+    final filteredTours = sortedTours.where((tour) {
+      final property = tour['properties'] as Map? ?? {};
+      final customer = tour['customers'] as Map? ?? {};
+      final title = (property['title'] ?? '').toString().toLowerCase();
+      final customerName = (customer['name'] ?? '').toString().toLowerCase();
+
+      final matchesSearch =
+          _tourSearchQuery.isEmpty ||
+          title.contains(_tourSearchQuery.toLowerCase()) ||
+          customerName.contains(_tourSearchQuery.toLowerCase());
+
+      final matchesStatus =
+          _tourStatusFilter == 'الكل' || tour['status'] == _tourStatusFilter;
+
+      return matchesSearch && matchesStatus;
+    }).toList();
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth > 750;
@@ -1628,55 +1942,119 @@ class _DashboardScreenState extends State<DashboardScreen>
 
         return Column(
           children: [
-            // Professional CRM Header
+            // Professional CRM Header with Search & Filter
             Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
                 color: AppColors.surface,
-                border: Border(bottom: BorderSide(color: AppColors.border)),
+                border: const Border(
+                  bottom: BorderSide(color: AppColors.border),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                  ),
+                ],
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  const Icon(Icons.calendar_today_rounded,
-                      color: AppColors.primary, size: 28),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'إدارة المعاينات الميدانية',
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'إدارة المواعيد والمعاينات',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                            fontSize: 16,
                             color: AppColors.textPrimary,
-                            letterSpacing: -0.5,
                           ),
                         ),
-                        Text(
-                          'تتبع وجدولة زيارات العملاء للعقارات المتاحة',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _showAddTourDialog,
-                    icon: const Icon(Icons.add_rounded, size: 20),
-                    label: const Text('جدولة معاينة جديدة'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ),
+                      ElevatedButton.icon(
+                        onPressed: _showAddTourDialog,
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('جدولة معاينة'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextField(
+                          onChanged: (val) =>
+                              setState(() => _tourSearchQuery = val),
+                          decoration: InputDecoration(
+                            hintText: 'بحث بالعقار أو العميل...',
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              size: 20,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: DropdownButtonFormField<String>(
+                          value: _tourStatusFilter,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'الكل',
+                              child: Text('كل الحالات'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'scheduled',
+                              child: Text('مجدولة ⏳'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'completed',
+                              child: Text('مكتملة ✅'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'cancelled',
+                              child: Text('ملغاة ❌'),
+                            ),
+                          ],
+                          onChanged: (v) =>
+                              setState(() => _tourStatusFilter = v!),
+                          decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1684,32 +2062,32 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             // Content Area
             Expanded(
-              child: _tours.isEmpty
+              child: filteredTours.isEmpty
                   ? _buildEmptyState(
                       icon: Icons.event_available_rounded,
-                      message: 'لا توجد معاينات مجدولة حالياً',
-                      subtitle: 'ابدأ بجدولة معاينة جديدة لربط العملاء بالعقارات',
+                      message: 'لا توجد معاينات تطابق الفلترة',
+                      subtitle:
+                          'ابدأ بجدولة معاينة جديدة أو قم بتغيير خيارات البحث',
                     )
                   : isDesktop
-                      ? GridView.builder(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            mainAxisExtent: 230,
-                          ),
-                          itemCount: _tours.length,
-                          itemBuilder: (context, index) =>
-                              _buildTourCard(_tours[index]),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                          itemCount: _tours.length,
-                          itemBuilder: (context, index) =>
-                              _buildTourCard(_tours[index]),
-                        ),
+                  ? GridView.builder(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 20,
+                        mainAxisSpacing: 20,
+                        mainAxisExtent: 240,
+                      ),
+                      itemCount: filteredTours.length,
+                      itemBuilder: (context, index) =>
+                          _buildTourCard(filteredTours[index]),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                      itemCount: filteredTours.length,
+                      itemBuilder: (context, index) =>
+                          _buildTourCard(filteredTours[index]),
+                    ),
             ),
           ],
         );
@@ -1747,176 +2125,230 @@ class _DashboardScreenState extends State<DashboardScreen>
       statusIcon = Icons.calendar_today_rounded;
     }
 
-    final DateTime? scheduledDate =
-        DateTime.tryParse(tour['scheduled_date']?.toString() ?? '');
+    final DateTime? scheduledDate = DateTime.tryParse(
+      tour['scheduled_date']?.toString() ?? '',
+    );
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.8)),
-        boxShadow: AppColors.cardShadow,
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          children: [
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _showTourDetailsDialog(tour),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Prominent Date Badge
-                      _buildDateBadge(scheduledDate, themeColor),
-                      const SizedBox(width: 16),
-                      // Info Section
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'معاينة: ${property['title'] ?? 'عقار غير محدد'}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    color: bgColor,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                        color: themeColor.withOpacity(0.2)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(statusIcon,
-                                          size: 10, color: themeColor),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        statusText,
-                                        style: TextStyle(
-                                          color: themeColor,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(Icons.person_outline_rounded,
-                                    size: 14, color: AppColors.textSecondary),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    customer['name'] ?? 'عميل غير معروف',
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(Icons.phone_iphone_rounded,
-                                    size: 14, color: AppColors.textMuted),
-                                const SizedBox(width: 6),
-                                Text(
-                                  customer['phone'] ?? 'بدون هاتف',
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (scheduledDate != null) ...[
-                              const SizedBox(height: 8),
+    // Dim cards that are completed or cancelled
+    final isArchived = isCompleted || isCancelled;
+
+    return Opacity(
+      opacity: isArchived ? 0.75 : 1.0,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: isArchived ? const Color(0xFFF8FAFC) : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isArchived
+                ? AppColors.border.withOpacity(0.5)
+                : AppColors.border.withOpacity(0.8),
+          ),
+          boxShadow: isArchived ? [] : AppColors.cardShadow,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _showTourDetailsDialog(tour),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Prominent Date Badge
+                        _buildDateBadge(
+                          scheduledDate,
+                          isArchived ? Colors.grey : themeColor,
+                        ),
+                        const SizedBox(width: 16),
+                        // Info Section
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Row(
                                 children: [
-                                  const Icon(Icons.access_time_rounded,
-                                      size: 14, color: AppColors.textMuted),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    "${scheduledDate.hour.toString().padLeft(2, '0')}:${scheduledDate.minute.toString().padLeft(2, '0')}",
-                                    style: const TextStyle(
-                                      color: AppColors.textMuted,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
+                                  Expanded(
+                                    child: Text(
+                                      'معاينة: ${property['title'] ?? 'عقار غير محدد'}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: isArchived
+                                            ? AppColors.textSecondary
+                                            : AppColors.textPrimary,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isArchived
+                                          ? Colors.grey.withOpacity(0.1)
+                                          : bgColor,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isArchived
+                                            ? Colors.grey.withOpacity(0.2)
+                                            : themeColor.withOpacity(0.2),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          statusIcon,
+                                          size: 10,
+                                          color: isArchived
+                                              ? Colors.grey
+                                              : themeColor,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          statusText,
+                                          style: TextStyle(
+                                            color: isArchived
+                                                ? Colors.grey
+                                                : themeColor,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.person_outline_rounded,
+                                    size: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      customer['name'] ?? 'عميل غير معروف',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14,
+                                        fontWeight: isArchived
+                                            ? FontWeight.normal
+                                            : FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (tour['notes'] != null &&
+                                  tour['notes'].toString().isNotEmpty) ...[
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.chat_bubble_outline_rounded,
+                                      size: 12,
+                                      color: AppColors.textMuted,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        tour['notes'].toString(),
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textMuted,
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            const Divider(height: 1, color: AppColors.border),
-            // Quick Actions Bar
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-              color: AppColors.surfaceSubtle.withOpacity(0.3),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  if (isScheduled)
-                    _buildTourQuickAction(
-                      icon: Icons.check_circle_outline_rounded,
-                      label: 'إتمام ✅',
-                      color: AppColors.success,
-                      onTap: () async {
-                        await _supabaseService.updateTourDetails(
-                          tourId: tour['id'].toString(),
-                          status: 'completed',
-                        );
-                        _loadDashboardData();
-                      },
+              const Divider(height: 1, color: AppColors.borderLight),
+              // Quick Action Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    _buildSmallActionBtn(
+                      icon: Icons.chat_rounded,
+                      label: 'واتساب',
+                      color: const Color(0xFF25D366),
+                      onTap: () =>
+                          _openWhatsApp(customer['phone'], customer['name']),
                     ),
-                  _buildTourQuickAction(
-                    icon: Icons.chat_outlined,
-                    label: 'واتساب 📱',
-                    color: const Color(0xFF25D366),
-                    onTap: () => _openWhatsApp(
-                        customer['phone'] ?? '', customer['name'] ?? 'عميل'),
-                  ),
-                  _buildTourQuickAction(
-                    icon: Icons.info_outline_rounded,
-                    label: 'التفاصيل 📝',
-                    color: AppColors.primary,
-                    onTap: () => _showTourDetailsDialog(tour),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    _buildSmallActionBtn(
+                      icon: Icons.info_outline_rounded,
+                      label: 'التفاصيل',
+                      color: AppColors.primary,
+                      onTap: () => _showTourDetailsDialog(tour),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmallActionBtn({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color.withOpacity(0.2)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1935,7 +2367,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'سبتمبر',
       'أكتوبر',
       'نوفمبر',
-      'ديسمبر'
+      'ديسمبر',
     ];
 
     return Container(
@@ -2008,10 +2440,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     final property = tour['properties'] as Map<String, dynamic>? ?? {};
     final customer = tour['customers'] as Map<String, dynamic>? ?? {};
     final status = tour['status']?.toString() ?? 'scheduled';
-    final notesController =
-        TextEditingController(text: tour['notes']?.toString() ?? '');
-    final feedbackController =
-        TextEditingController(text: tour['next_steps']?.toString() ?? '');
+    final notesController = TextEditingController(
+      text: tour['notes']?.toString() ?? '',
+    );
+    final feedbackController = TextEditingController(
+      text: tour['next_steps']?.toString() ?? '',
+    );
 
     bool isSaving = false;
 
@@ -2021,10 +2455,13 @@ class _DashboardScreenState extends State<DashboardScreen>
         textDirection: TextDirection.rtl,
         child: StatefulBuilder(
           builder: (context, setModalState) => Dialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             child: Container(
-              width: MediaQuery.of(context).size.width > 700 ? 520 : MediaQuery.of(context).size.width * 0.95,
+              width: MediaQuery.of(context).size.width > 700
+                  ? 520
+                  : MediaQuery.of(context).size.width * 0.95,
               padding: const EdgeInsets.all(24),
               child: SingleChildScrollView(
                 child: Column(
@@ -2040,8 +2477,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                             color: AppColors.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Icon(Icons.calendar_month_rounded,
-                              color: AppColors.primary, size: 26),
+                          child: const Icon(
+                            Icons.calendar_month_rounded,
+                            color: AppColors.primary,
+                            size: 26,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
@@ -2051,14 +2491,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                               const Text(
                                 'تفاصيل المعاينة المجدولة 📅',
                                 style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                               Text(
                                 'معرف المعاينة: #${tour['id']}',
                                 style: const TextStyle(
-                                    fontSize: 12, color: AppColors.textMuted),
+                                  fontSize: 12,
+                                  color: AppColors.textMuted,
+                                ),
                               ),
                             ],
                           ),
@@ -2085,22 +2528,30 @@ class _DashboardScreenState extends State<DashboardScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('تاريخ المعاينة:',
-                                    style: TextStyle(
-                                        fontSize: 12, color: AppColors.textMuted)),
+                                const Text(
+                                  'تاريخ المعاينة:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textMuted,
+                                  ),
+                                ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(Icons.event_rounded,
-                                        size: 16, color: AppColors.primary),
+                                    const Icon(
+                                      Icons.event_rounded,
+                                      size: 16,
+                                      color: AppColors.primary,
+                                    ),
                                     const SizedBox(width: 6),
                                     Text(
                                       tour['scheduled_date']?.toString() ??
                                           'غير محدد',
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                          color: AppColors.textPrimary),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: AppColors.textPrimary,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -2109,34 +2560,36 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: status == 'completed'
                                   ? AppColors.successBg
                                   : (status == 'cancelled'
-                                      ? AppColors.dangerBg
-                                      : AppColors.warningBg),
+                                        ? AppColors.dangerBg
+                                        : AppColors.warningBg),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: status == 'completed'
                                     ? AppColors.success.withOpacity(0.3)
                                     : (status == 'cancelled'
-                                        ? AppColors.danger.withOpacity(0.3)
-                                        : AppColors.warning.withOpacity(0.3)),
+                                          ? AppColors.danger.withOpacity(0.3)
+                                          : AppColors.warning.withOpacity(0.3)),
                               ),
                             ),
                             child: Text(
                               status == 'completed'
                                   ? '✅ مكتملة'
                                   : (status == 'cancelled'
-                                      ? '❌ ملغاة'
-                                      : '📅 مجدولة'),
+                                        ? '❌ ملغاة'
+                                        : '📅 مجدولة'),
                               style: TextStyle(
                                 color: status == 'completed'
                                     ? AppColors.success
                                     : (status == 'cancelled'
-                                        ? AppColors.danger
-                                        : AppColors.warning),
+                                          ? AppColors.danger
+                                          : AppColors.warning),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -2148,11 +2601,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                     const SizedBox(height: 16),
 
                     // Property Details Section
-                    const Text('تفاصيل العقار المطلوب:',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: AppColors.textSecondary)),
+                    const Text(
+                      'تفاصيل العقار المطلوب:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -2169,8 +2625,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                               color: AppColors.primary.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.home_rounded,
-                                color: AppColors.primary, size: 22),
+                            child: const Icon(
+                              Icons.home_rounded,
+                              color: AppColors.primary,
+                              size: 22,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -2180,14 +2639,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 Text(
                                   property['title'] ?? 'عقار غير مسمى',
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 14),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
                                   '📍 ${property['location'] ?? ''}',
                                   style: const TextStyle(
-                                      color: AppColors.textMuted, fontSize: 12),
+                                    color: AppColors.textMuted,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -2198,11 +2661,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                     const SizedBox(height: 16),
 
                     // Customer Details Section
-                    const Text('بيانات العميل:',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: AppColors.textSecondary)),
+                    const Text(
+                      'بيانات العميل:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -2219,8 +2685,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                               color: AppColors.secondary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.person_rounded,
-                                color: AppColors.secondary, size: 22),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              color: AppColors.secondary,
+                              size: 22,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -2230,12 +2699,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 Text(
                                   customer['name'] ?? 'عميل غير مسجل',
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 14),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                                 Text(
                                   '📞 ${customer['phone'] ?? ''}',
                                   style: const TextStyle(
-                                      color: AppColors.textMuted, fontSize: 12),
+                                    color: AppColors.textMuted,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -2243,15 +2716,21 @@ class _DashboardScreenState extends State<DashboardScreen>
                           Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.chat_rounded,
-                                    color: Color(0xFF25D366)),
+                                icon: const Icon(
+                                  Icons.chat_rounded,
+                                  color: Color(0xFF25D366),
+                                ),
                                 tooltip: 'مراسلة واتساب',
                                 onPressed: () => _openWhatsApp(
-                                    customer['phone'], customer['name']),
+                                  customer['phone'],
+                                  customer['name'],
+                                ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.phone_rounded,
-                                    color: AppColors.primary),
+                                icon: const Icon(
+                                  Icons.phone_rounded,
+                                  color: AppColors.primary,
+                                ),
                                 tooltip: 'اتصال هاتفي',
                                 onPressed: () =>
                                     _makePhoneCall(customer['phone']),
@@ -2276,7 +2755,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                       controller: feedbackController,
                       decoration: const InputDecoration(
                         labelText: 'نتيجة المعاينة وتغذية العميل الراجعة 📝',
-                        hintText: 'مثال: العميل أبدى رغبته بالشراء وطلب كراسة الشروط...',
+                        hintText:
+                            'مثال: العميل أبدى رغبته بالشراء وطلب كراسة الشروط...',
                       ),
                       maxLines: 2,
                     ),
@@ -2288,14 +2768,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                         if (status == 'scheduled') ...[
                           Expanded(
                             child: ElevatedButton.icon(
-                              icon: const Icon(Icons.check_circle_rounded, size: 18),
+                              icon: const Icon(
+                                Icons.check_circle_rounded,
+                                size: 18,
+                              ),
                               label: const Text('إتمام المعاينة'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.success,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onPressed: isSaving
                                   ? null
@@ -2305,7 +2791,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         tourId: tour['id'].toString(),
                                         status: 'completed',
                                         notes: notesController.text.trim(),
-                                        nextSteps: feedbackController.text.trim(),
+                                        nextSteps: feedbackController.text
+                                            .trim(),
                                       );
                                       if (mounted) {
                                         Navigator.pop(context);
@@ -2317,15 +2804,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                           const SizedBox(width: 8),
                           Expanded(
                             child: OutlinedButton.icon(
-                              icon: const Icon(Icons.cancel_outlined,
-                                  size: 18, color: AppColors.danger),
-                              label: const Text('إلغاء المعاينة',
-                                  style: TextStyle(color: AppColors.danger)),
+                              icon: const Icon(
+                                Icons.cancel_outlined,
+                                size: 18,
+                                color: AppColors.danger,
+                              ),
+                              label: const Text(
+                                'إلغاء المعاينة',
+                                style: TextStyle(color: AppColors.danger),
+                              ),
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(color: AppColors.danger),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onPressed: isSaving
                                   ? null
@@ -2349,9 +2844,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onPressed: isSaving
                                   ? null
@@ -2360,7 +2858,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       await _supabaseService.updateTourDetails(
                                         tourId: tour['id'].toString(),
                                         notes: notesController.text.trim(),
-                                        nextSteps: feedbackController.text.trim(),
+                                        nextSteps: feedbackController.text
+                                            .trim(),
                                       );
                                       if (mounted) {
                                         Navigator.pop(context);
@@ -2387,7 +2886,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     final notesController = TextEditingController();
-    Property? selectedProperty = _properties.isNotEmpty ? _properties.first : null;
+    Property? selectedProperty = _properties.isNotEmpty
+        ? _properties.first
+        : null;
     DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
     bool isSaving = false;
 
@@ -2397,17 +2898,23 @@ class _DashboardScreenState extends State<DashboardScreen>
         textDirection: TextDirection.rtl,
         child: StatefulBuilder(
           builder: (context, setModalState) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: const Row(
               children: [
                 Icon(Icons.add_task_rounded, color: AppColors.primary),
                 SizedBox(width: 10),
-                Text('جدولة معاينة جديدة 📅',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  'جدولة معاينة جديدة 📅',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             content: SizedBox(
-              width: MediaQuery.of(context).size.width > 700 ? 480 : MediaQuery.of(context).size.width,
+              width: MediaQuery.of(context).size.width > 700
+                  ? 480
+                  : MediaQuery.of(context).size.width,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -2415,42 +2922,58 @@ class _DashboardScreenState extends State<DashboardScreen>
                     DropdownButtonFormField<Property>(
                       value: selectedProperty,
                       items: _properties
-                          .map((p) => DropdownMenuItem(
-                                value: p,
-                                child: Text(p.title,
-                                    overflow: TextOverflow.ellipsis),
-                              ))
+                          .map(
+                            (p) => DropdownMenuItem(
+                              value: p,
+                              child: Text(
+                                p.title,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (v) => setModalState(() => selectedProperty = v),
-                      decoration: const InputDecoration(labelText: 'اختر العقار المعني'),
+                      onChanged: (v) =>
+                          setModalState(() => selectedProperty = v),
+                      decoration: const InputDecoration(
+                        labelText: 'اختر العقار المعني',
+                      ),
                     ),
                     const SizedBox(height: 14),
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(labelText: 'اسم العميل الكامل'),
+                      decoration: const InputDecoration(
+                        labelText: 'اسم العميل الكامل',
+                      ),
                     ),
                     const SizedBox(height: 14),
                     TextField(
                       controller: phoneController,
-                      decoration: const InputDecoration(labelText: 'رقم هاتف العميل'),
+                      decoration: const InputDecoration(
+                        labelText: 'رقم هاتف العميل',
+                      ),
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 14),
                     Row(
                       children: [
-                        const Text('تاريخ المعاينة:',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Text(
+                          'تاريخ المعاينة:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         const Spacer(),
                         TextButton.icon(
                           icon: const Icon(Icons.calendar_month_rounded),
                           label: Text(
-                              '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}'),
+                            '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                          ),
                           onPressed: () async {
                             final picked = await showDatePicker(
                               context: context,
                               initialDate: selectedDate,
                               firstDate: DateTime.now(),
-                              lastDate: DateTime.now().add(const Duration(days: 365)),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
                             );
                             if (picked != null) {
                               setModalState(() => selectedDate = picked);
@@ -2488,7 +3011,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                             phoneController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('من فضلك ادخل اسم العميل ورقم الهاتف'),
+                              content: Text(
+                                'من فضلك ادخل اسم العميل ورقم الهاتف',
+                              ),
                               backgroundColor: AppColors.warning,
                             ),
                           );
@@ -2550,15 +3075,21 @@ class _DashboardScreenState extends State<DashboardScreen>
               color: AppColors.primary.withOpacity(0.06),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon,
-                size: 52, color: AppColors.primary.withOpacity(0.5)),
+            child: Icon(
+              icon,
+              size: 52,
+              color: AppColors.primary.withOpacity(0.5),
+            ),
           ),
           const SizedBox(height: 16),
-          Text(message,
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87)),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
@@ -2581,19 +3112,26 @@ class _DashboardScreenState extends State<DashboardScreen>
     final purposeStr = formData['purpose']?.toString() ?? '';
     final rawName = (lead['name'] ?? 'عميل جديد') as String;
 
-    final isSellIntent = sourceStr.contains('sell') ||
+    final isSellIntent =
+        sourceStr.contains('sell') ||
         intentStr.contains('بيع') ||
         purposeStr.contains('بيع') ||
         rawName.contains('بيع') ||
         rawName.contains('عرض');
 
-    final displayName = (isSellIntent && (rawName == 'عميل محتمل (الشات الذكي)' || rawName.isEmpty))
+    final displayName =
+        (isSellIntent &&
+            (rawName == 'عميل محتمل (الشات الذكي)' || rawName.isEmpty))
         ? 'عرض عقار للبيع 💰 (مالك)'
         : rawName;
 
-    String initialNotes = formData['chat_summary']?.toString() ?? 'عميل مهتم بعقارات طنطا والقاهرة';
-    if (isSellIntent && (initialNotes.contains('العميل مهتم بـ') || initialNotes.isEmpty)) {
-      initialNotes = 'يرغب العميل في عرض عقاره للبيع والتسويق عبر الشركة - يطلب التواصل للتنسيق للمعاينة والتصوير المجاني 📸';
+    String initialNotes =
+        formData['chat_summary']?.toString() ??
+        'عميل مهتم بعقارات طنطا والقاهرة';
+    if (isSellIntent &&
+        (initialNotes.contains('العميل مهتم بـ') || initialNotes.isEmpty)) {
+      initialNotes =
+          'يرغب العميل في عرض عقاره للبيع والتسويق عبر الشركة - يطلب التواصل للتنسيق للمعاينة والتصوير المجاني 📸';
     }
 
     final notesController = TextEditingController(text: initialNotes);
@@ -2604,10 +3142,13 @@ class _DashboardScreenState extends State<DashboardScreen>
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Container(
-            width: MediaQuery.of(context).size.width > 700 ? 480 : MediaQuery.of(context).size.width * 0.95,
+            width: MediaQuery.of(context).size.width > 700
+                ? 480
+                : MediaQuery.of(context).size.width * 0.95,
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -2621,20 +3162,27 @@ class _DashboardScreenState extends State<DashboardScreen>
                         color: AppColors.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.sync_alt_rounded,
-                          color: AppColors.primary),
+                      child: const Icon(
+                        Icons.sync_alt_rounded,
+                        color: AppColors.primary,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('إضافة لقاعدة العملاء',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('سيتم إضافة العميل لقاعدة البيانات الدائمة',
-                              style: TextStyle(
-                                  fontSize: 12, color: Colors.grey)),
+                          Text(
+                            'إضافة لقاعدة العملاء',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'سيتم إضافة العميل لقاعدة البيانات الدائمة',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
                         ],
                       ),
                     ),
@@ -2650,32 +3198,46 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDialogInfo(
-                          Icons.person_rounded,
-                          displayName),
+                      _buildDialogInfo(Icons.person_rounded, displayName),
                       const SizedBox(height: 6),
                       _buildDialogInfo(
-                          Icons.phone_rounded, lead['phone']?.toString() ?? ''),
+                        Icons.phone_rounded,
+                        lead['phone']?.toString() ?? '',
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text('تصنيف العميل:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'تصنيف العميل:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
                     _buildStatusChoice(
-                        '🔥 متحمس', 'Hot', Colors.red, selectedStatus,
-                        () => setModalState(() => selectedStatus = 'Hot')),
+                      '🔥 متحمس',
+                      'Hot',
+                      Colors.red,
+                      selectedStatus,
+                      () => setModalState(() => selectedStatus = 'Hot'),
+                    ),
                     const SizedBox(width: 8),
                     _buildStatusChoice(
-                        '☀️ مهتم', 'Warm', Colors.orange, selectedStatus,
-                        () => setModalState(() => selectedStatus = 'Warm')),
+                      '☀️ مهتم',
+                      'Warm',
+                      Colors.orange,
+                      selectedStatus,
+                      () => setModalState(() => selectedStatus = 'Warm'),
+                    ),
                     const SizedBox(width: 8),
                     _buildStatusChoice(
-                        '❄️ بارد', 'Cold', Colors.blueGrey, selectedStatus,
-                        () => setModalState(() => selectedStatus = 'Cold')),
+                      '❄️ بارد',
+                      'Cold',
+                      Colors.blueGrey,
+                      selectedStatus,
+                      () => setModalState(() => selectedStatus = 'Cold'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -2684,7 +3246,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                   decoration: InputDecoration(
                     labelText: 'ملاحظات المتابعة',
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     filled: true,
                     fillColor: Colors.grey[50],
                   ),
@@ -2699,7 +3262,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: const Text('إلغاء'),
                       ),
@@ -2713,7 +3277,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           elevation: 0,
                         ),
                         onPressed: isConverting
@@ -2734,7 +3299,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text(
-                                            'تمت إضافة العميل لقائمة العملاء بنجاح ✅'),
+                                          'تمت إضافة العميل لقائمة العملاء بنجاح ✅',
+                                        ),
                                         backgroundColor: AppColors.success,
                                       ),
                                     );
@@ -2744,9 +3310,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   setModalState(() => isConverting = false);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text('خطأ: $e'),
-                                            backgroundColor: AppColors.danger));
+                                      SnackBar(
+                                        content: Text('خطأ: $e'),
+                                        backgroundColor: AppColors.danger,
+                                      ),
+                                    );
                                   }
                                 }
                               },
@@ -2755,9 +3323,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2))
-                            : const Text('حفظ وتحويل',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'حفظ وتحويل',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                       ),
                     ),
                   ],
@@ -2775,14 +3348,21 @@ class _DashboardScreenState extends State<DashboardScreen>
       children: [
         Icon(icon, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 8),
-        Text(text,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+        Text(
+          text,
+          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+        ),
       ],
     );
   }
 
-  Widget _buildStatusChoice(String label, String value, Color color,
-      String selected, VoidCallback onTap) {
+  Widget _buildStatusChoice(
+    String label,
+    String value,
+    Color color,
+    String selected,
+    VoidCallback onTap,
+  ) {
     final isSelected = selected == value;
     return Expanded(
       child: GestureDetector(
@@ -2802,8 +3382,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               label,
               style: TextStyle(
                 color: isSelected ? color : Colors.grey[600],
-                fontWeight:
-                    isSelected ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 12,
               ),
             ),
@@ -2822,12 +3401,17 @@ class _DashboardScreenState extends State<DashboardScreen>
         textDirection: TextDirection.rtl,
         child: StatefulBuilder(
           builder: (context, setModalState) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: const Row(
               children: [
                 Icon(Icons.create_new_folder_rounded, color: AppColors.primary),
                 SizedBox(width: 8),
-                Text('إضافة فولدر / منطقة جديدة 📁', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  'إضافة فولدر / منطقة جديدة 📁',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             content: TextField(
@@ -2839,9 +3423,14 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء'),
+              ),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
                 onPressed: isSaving
                     ? null
                     : () async {
@@ -2858,14 +3447,32 @@ class _DashboardScreenState extends State<DashboardScreen>
                           if (context.mounted) {
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('تم إنشاء فولدر "$name" بنجاح 📁'), backgroundColor: AppColors.success),
+                              SnackBar(
+                                content: Text(
+                                  'تم إنشاء فولدر "$name" بنجاح 📁',
+                                ),
+                                backgroundColor: AppColors.success,
+                              ),
                             );
                           }
                         }
                       },
                 child: isSaving
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('إنشاء الفولدر', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'إنشاء الفولدر',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ],
           ),
@@ -2886,8 +3493,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     final roomsController = TextEditingController(text: '3');
     final bathroomsController = TextEditingController(text: '2');
     final floorController = TextEditingController(text: '2');
-    final yearController =
-        TextEditingController(text: DateTime.now().year.toString());
+    final yearController = TextEditingController(
+      text: DateTime.now().year.toString(),
+    );
     final roiController = TextEditingController(text: '0');
 
     bool isSaving = false;
@@ -2898,7 +3506,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     String status = 'متاح';
     String type = 'شقة';
     String finishing = AppStrings.finishingTypes.first;
-    String folderName = _allAvailableFolders.firstWhere((f) => f != 'الكل', orElse: () => 'عام');
+    String folderName = _allAvailableFolders.firstWhere(
+      (f) => f != 'الكل',
+      orElse: () => 'عام',
+    );
     bool isFeatured = true;
     List<String> selectedAmenities = ['مصعد', 'أمن 24/7'];
 
@@ -2911,686 +3522,895 @@ class _DashboardScreenState extends State<DashboardScreen>
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
             builder: (context, setDialogState) => AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.add_home_rounded,
+                      color: AppColors.secondary,
+                      size: isDesktop ? 24 : 20,
+                    ),
                   ),
-                  child: Icon(Icons.add_home_rounded,
-                      color: AppColors.secondary, size: isDesktop ? 24 : 20),
-                ),
-                const SizedBox(width: 12),
-                Text('إضافة عقار جديد 🏢',
-                    style: TextStyle(fontSize: isDesktop ? 18 : 16, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            content: SizedBox(
-              width: isDesktop ? 800 : MediaQuery.of(context).size.width * 0.95,
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      if (isDesktop)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: Row(
-                                  children: [
-                                    const Text('الغرض:'),
-                                    const SizedBox(width: 12),
-                                    ChoiceChip(
-                                      label: const Text('بيع'),
-                                      selected: purpose == 'بيع',
-                                      onSelected: (val) =>
-                                          setDialogState(() => purpose = 'بيع'),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ChoiceChip(
-                                      label: const Text('إيجار'),
-                                      selected: purpose == 'إيجار',
-                                      onSelected: (val) =>
-                                          setDialogState(() => purpose = 'إيجار'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: Row(
-                                  children: [
-                                    const Text('الدفع:'),
-                                    const SizedBox(width: 12),
-                                    ChoiceChip(
-                                      label: const Text('كاش'),
-                                      selected: paymentMethod == 'كاش',
-                                      onSelected: (val) =>
-                                          setDialogState(() => paymentMethod = 'كاش'),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ChoiceChip(
-                                      label: const Text('تقسيط'),
-                                      selected: paymentMethod == 'تقسيط',
-                                      onSelected: (val) =>
-                                          setDialogState(() => paymentMethod = 'تقسيط'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: status,
-                                items: AppStrings.propertyStatuses
-                                    .map((s) =>
-                                        DropdownMenuItem(value: s, child: Text(s)))
-                                    .toList(),
-                                onChanged: (v) =>
-                                    setDialogState(() => status = v!),
-                                decoration: InputDecoration(
-                                    labelText: 'حالة العقار',
-                                    border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10))),
-                              ),
-                            ),
-                          ],
-                        )
-                      else ...[
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: Row(
-                                  children: [
-                                    const Text('الغرض:'),
-                                    const SizedBox(width: 12),
-                                    ChoiceChip(
-                                      label: const Text('بيع'),
-                                      selected: purpose == 'بيع',
-                                      onSelected: (val) =>
-                                          setDialogState(() => purpose = 'بيع'),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ChoiceChip(
-                                      label: const Text('إيجار'),
-                                      selected: purpose == 'إيجار',
-                                      onSelected: (val) =>
-                                          setDialogState(() => purpose = 'إيجار'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(12)),
-                                child: Row(
-                                  children: [
-                                    const Text('الدفع:'),
-                                    const SizedBox(width: 8),
-                                    ChoiceChip(
-                                      label: const Text('كاش'),
-                                      selected: paymentMethod == 'كاش',
-                                      onSelected: (val) =>
-                                          setDialogState(() => paymentMethod = 'كاش'),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    ChoiceChip(
-                                      label: const Text('تقسيط'),
-                                      selected: paymentMethod == 'تقسيط',
-                                      onSelected: (val) =>
-                                          setDialogState(() => paymentMethod = 'تقسيط'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: status,
-                          items: AppStrings.propertyStatuses
-                              .map((s) =>
-                                  DropdownMenuItem(value: s, child: Text(s)))
-                              .toList(),
-                          onChanged: (v) =>
-                              setDialogState(() => status = v!),
-                          decoration: InputDecoration(
-                              labelText: 'حالة العقار',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10))),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.blue.withOpacity(0.2))),
-                              child: Row(
-                                children: [
-                                  const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                  const SizedBox(width: 12),
-                                  ChoiceChip(
-                                    label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
-                                    selected: targetPurpose == 'سكن شخصي',
-                                    onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  ChoiceChip(
-                                    label: const Text('استثمار', style: TextStyle(fontSize: 12)),
-                                    selected: targetPurpose == 'استثمار',
-                                    onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 16),
-                      if (isDesktop)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: finishing,
-                                decoration: InputDecoration(
-                                  labelText: 'مستوى التشطيب ✨',
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                                items: AppStrings.finishingTypes
-                                    .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                    .toList(),
-                                onChanged: (val) => setDialogState(() => finishing = val!),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: _allAvailableFolders.contains(folderName) ? folderName : (_allAvailableFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
-                                decoration: InputDecoration(
-                                  labelText: 'الفولدر / المنطقة 📁',
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                                items: _allAvailableFolders.where((f) => f != 'الكل')
-                                    .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                    .toList(),
-                                onChanged: (val) => setDialogState(() => folderName = val!),
-                              ),
-                            ),
-                          ],
-                        )
-                      else ...[
-                        DropdownButtonFormField<String>(
-                          value: finishing,
-                          decoration: InputDecoration(
-                            labelText: 'مستوى التشطيب ✨',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          items: AppStrings.finishingTypes
-                              .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                              .toList(),
-                          onChanged: (val) => setDialogState(() => finishing = val!),
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: _allAvailableFolders.contains(folderName) ? folderName : (_allAvailableFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
-                          decoration: InputDecoration(
-                            labelText: 'الفولدر / المنطقة 📁',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          items: _allAvailableFolders.where((f) => f != 'الكل')
-                              .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                              .toList(),
-                          onChanged: (val) => setDialogState(() => folderName = val!),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: titleController,
-                        decoration: InputDecoration(
-                            labelText: 'عنوان الإعلان (مطلوب)',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10))),
-                        validator: (v) => v!.isEmpty ? 'يرجى إدخال العنوان' : null,
-                      ),
-                      const SizedBox(height: 16),
-                      if (isDesktop)
-                        Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: TextFormField(
-                                controller: locationController,
-                                decoration: InputDecoration(
-                                    labelText: 'الموقع والحي 📍',
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10))),
-                                validator: (v) =>
-                                    v!.isEmpty ? 'يرجى إدخال الموقع' : null,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: type,
-                                items: AppStrings.propertyTypes
-                                    .map((t) =>
-                                        DropdownMenuItem(value: t, child: Text(t)))
-                                    .toList(),
-                                onChanged: (v) =>
-                                    setDialogState(() => type = v!),
-                                decoration: InputDecoration(
-                                    labelText: 'النوع',
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10))),
-                              ),
-                            ),
-                          ],
-                        )
-                      else ...[
-                        TextFormField(
-                          controller: locationController,
-                          decoration: InputDecoration(
-                              labelText: 'الموقع والحي 📍',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10))),
-                          validator: (v) =>
-                              v!.isEmpty ? 'يرجى إدخال الموقع' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          value: type,
-                          items: AppStrings.propertyTypes
-                              .map((t) =>
-                                  DropdownMenuItem(value: t, child: Text(t)))
-                              .toList(),
-                          onChanged: (v) =>
-                              setDialogState(() => type = v!),
-                          decoration: InputDecoration(
-                              labelText: 'النوع',
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10))),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      if (isDesktop)
-                        Row(
-                          children: [
-                            Expanded(
-                                child: TextFormField(
-                                    controller: priceController,
-                                    decoration: InputDecoration(
-                                        labelText: purpose == 'بيع'
-                                            ? 'سعر البيع (ج.م)'
-                                            : 'الإيجار الشهري (ج.م)',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10))),
-                                    keyboardType: TextInputType.number)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: TextFormField(
-                                    controller: areaController,
-                                    decoration: InputDecoration(
-                                        labelText: 'المساحة (م²)',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10))),
-                                    keyboardType: TextInputType.number)),
-                          ],
-                        )
-                      else ...[
-                        TextFormField(
-                            controller: priceController,
-                            decoration: InputDecoration(
-                                labelText: purpose == 'بيع'
-                                    ? 'سعر البيع (ج.م)'
-                                    : 'الإيجار الشهري (ج.م)',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            keyboardType: TextInputType.number),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                            controller: areaController,
-                            decoration: InputDecoration(
-                                labelText: 'المساحة (م²)',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            keyboardType: TextInputType.number),
-                      ],
-                      const SizedBox(height: 16),
-                      if (type != 'أرض')
+                  const SizedBox(width: 12),
+                  Text(
+                    'إضافة عقار جديد 🏢',
+                    style: TextStyle(
+                      fontSize: isDesktop ? 18 : 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: isDesktop
+                    ? 800
+                    : MediaQuery.of(context).size.width * 0.95,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
                         if (isDesktop)
                           Row(
                             children: [
                               Expanded(
-                                  child: TextFormField(
-                                      controller: roomsController,
-                                      decoration: InputDecoration(
-                                          labelText: 'الغرف',
-                                          border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10))),
-                                      keyboardType: TextInputType.number)),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Text('الغرض:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('بيع'),
+                                        selected: purpose == 'بيع',
+                                        onSelected: (val) => setDialogState(
+                                          () => purpose = 'بيع',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('إيجار'),
+                                        selected: purpose == 'إيجار',
+                                        onSelected: (val) => setDialogState(
+                                          () => purpose = 'إيجار',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
-                                  child: TextFormField(
-                                      controller: bathroomsController,
-                                      decoration: InputDecoration(
-                                          labelText: 'الحمامات',
-                                          border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10))),
-                                      keyboardType: TextInputType.number)),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Text('الدفع:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('كاش'),
+                                        selected: paymentMethod == 'كاش',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'كاش',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('تقسيط'),
+                                        selected: paymentMethod == 'تقسيط',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'تقسيط',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
-                                  child: TextFormField(
-                                      controller: floorController,
-                                      decoration: InputDecoration(
-                                          labelText: 'الدور',
-                                          border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10))),
-                                      keyboardType: TextInputType.number)),
+                                child: DropdownButtonFormField<String>(
+                                  value: status,
+                                  items: AppStrings.propertyStatuses
+                                      .map(
+                                        (s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(s),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) =>
+                                      setDialogState(() => status = v!),
+                                  decoration: InputDecoration(
+                                    labelText: 'حالة العقار',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Text('الغرض:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('بيع'),
+                                        selected: purpose == 'بيع',
+                                        onSelected: (val) => setDialogState(
+                                          () => purpose = 'بيع',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('إيجار'),
+                                        selected: purpose == 'إيجار',
+                                        onSelected: (val) => setDialogState(
+                                          () => purpose = 'إيجار',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Text('الدفع:'),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('كاش'),
+                                        selected: paymentMethod == 'كاش',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'كاش',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      ChoiceChip(
+                                        label: const Text('تقسيط'),
+                                        selected: paymentMethod == 'تقسيط',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'تقسيط',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: status,
+                            items: AppStrings.propertyStatuses
+                                .map(
+                                  (s) => DropdownMenuItem(
+                                    value: s,
+                                    child: Text(s),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) => setDialogState(() => status = v!),
+                            decoration: InputDecoration(
+                              labelText: 'حالة العقار',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Text(
+                                      'نوع الاستخدام:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'سكن شخصي',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'سكن شخصي',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'سكن شخصي',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'استثمار',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'استثمار',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'استثمار',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const SizedBox(height: 16),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: finishing,
+                                  decoration: InputDecoration(
+                                    labelText: 'مستوى التشطيب ✨',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  items: AppStrings.finishingTypes
+                                      .map(
+                                        (f) => DropdownMenuItem(
+                                          value: f,
+                                          child: Text(f),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (val) =>
+                                      setDialogState(() => finishing = val!),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value:
+                                      _allAvailableFolders.contains(folderName)
+                                      ? folderName
+                                      : (_allAvailableFolders
+                                                .where((f) => f != 'الكل')
+                                                .firstOrNull ??
+                                            'عام'),
+                                  decoration: InputDecoration(
+                                    labelText: 'الفولدر / المنطقة 📁',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  items: _allAvailableFolders
+                                      .where((f) => f != 'الكل')
+                                      .map(
+                                        (f) => DropdownMenuItem(
+                                          value: f,
+                                          child: Text(f),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (val) =>
+                                      setDialogState(() => folderName = val!),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          DropdownButtonFormField<String>(
+                            value: finishing,
+                            decoration: InputDecoration(
+                              labelText: 'مستوى التشطيب ✨',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            items: AppStrings.finishingTypes
+                                .map(
+                                  (f) => DropdownMenuItem(
+                                    value: f,
+                                    child: Text(f),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setDialogState(() => finishing = val!),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _allAvailableFolders.contains(folderName)
+                                ? folderName
+                                : (_allAvailableFolders
+                                          .where((f) => f != 'الكل')
+                                          .firstOrNull ??
+                                      'عام'),
+                            decoration: InputDecoration(
+                              labelText: 'الفولدر / المنطقة 📁',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            items: _allAvailableFolders
+                                .where((f) => f != 'الكل')
+                                .map(
+                                  (f) => DropdownMenuItem(
+                                    value: f,
+                                    child: Text(f),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setDialogState(() => folderName = val!),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            labelText: 'عنوان الإعلان (مطلوب)',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          validator: (v) =>
+                              v!.isEmpty ? 'يرجى إدخال العنوان' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: locationController,
+                                  decoration: InputDecoration(
+                                    labelText: 'الموقع والحي 📍',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  validator: (v) =>
+                                      v!.isEmpty ? 'يرجى إدخال الموقع' : null,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: type,
+                                  items: AppStrings.propertyTypes
+                                      .map(
+                                        (t) => DropdownMenuItem(
+                                          value: t,
+                                          child: Text(t),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (v) =>
+                                      setDialogState(() => type = v!),
+                                  decoration: InputDecoration(
+                                    labelText: 'النوع',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           )
                         else ...[
                           TextFormField(
-                              controller: roomsController,
-                              decoration: InputDecoration(
-                                  labelText: 'الغرف',
-                                  border: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10))),
-                              keyboardType: TextInputType.number),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                              controller: bathroomsController,
-                              decoration: InputDecoration(
-                                  labelText: 'الحمامات',
-                                  border: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10))),
-                              keyboardType: TextInputType.number),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                              controller: floorController,
-                              decoration: InputDecoration(
-                                  labelText: 'الدور',
-                                  border: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10))),
-                              keyboardType: TextInputType.number),
-                        ],
-                      const SizedBox(height: 16),
-                      if (isDesktop)
-                        Row(
-                          children: [
-                            if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                              Expanded(
-                                  child: TextFormField(
-                                      controller: roiController,
-                                      decoration: InputDecoration(
-                                          labelText: 'العائد ROI %',
-                                          border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10))),
-                                      keyboardType: TextInputType.number)),
-                            if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                              const SizedBox(width: 12),
-                            Expanded(
-                                child: TextFormField(
-                                    controller: yearController,
-                                    decoration: InputDecoration(
-                                        labelText: 'سنة البناء',
-                                        border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10))),
-                                    keyboardType: TextInputType.number)),
-                          ],
-                        )
-                      else ...[
-                        if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                          TextFormField(
-                              controller: roiController,
-                              decoration: InputDecoration(
-                                  labelText: 'العائد ROI %',
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10))),
-                              keyboardType: TextInputType.number),
-                        if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                          const SizedBox(height: 12),
-                        TextFormField(
-                            controller: yearController,
+                            controller: locationController,
                             decoration: InputDecoration(
-                                labelText: 'سنة البناء',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            keyboardType: TextInputType.number),
-                      ],
-                    const SizedBox(height: 16),
-                    const Align(
-                        alignment: Alignment.centerRight,
-                        child: Text('المرافق والخدمات:',
-                            style: TextStyle(fontWeight: FontWeight.bold))),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: AppStrings.availableAmenities.map((amenity) {
-                        final isSelected = selectedAmenities.contains(amenity);
-                        return FilterChip(
-                          label: Text(amenity, style: const TextStyle(fontSize: 12)),
-                          selected: isSelected,
-                          selectedColor: AppColors.primary.withOpacity(0.15),
-                          checkmarkColor: AppColors.primary,
-                          onSelected: (val) {
-                            setDialogState(() {
-                              if (val) {
-                                selectedAmenities.add(amenity);
-                              } else {
-                                selectedAmenities.remove(amenity);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                        controller: descController,
-                        decoration: InputDecoration(
-                            labelText: 'وصف إضافي للعقار',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10))),
-                        maxLines: 2),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                        controller: videoUrlController,
-                        decoration: InputDecoration(
-                            labelText: 'رابط فيديو المعاينة (YouTube / Vimeo / رابط مباشر) 🎥',
-                            hintText: 'https://www.youtube.com/watch?v=...',
-                            prefixIcon: const Icon(Icons.video_library_rounded, color: AppColors.primary),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10)))),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey[200]!),
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Column(
-                        children: [
-                          const Text('صور العقار 📸',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                              labelText: 'الموقع والحي 📍',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            validator: (v) =>
+                                v!.isEmpty ? 'يرجى إدخال الموقع' : null,
+                          ),
                           const SizedBox(height: 12),
-                          if (selectedFiles.isNotEmpty)
-                            Wrap(
-                                spacing: 8,
-                                children: selectedFiles
-                                    .map((f) => Chip(
-                                        label: Text(f.name),
-                                        onDeleted: () => setDialogState(
-                                            () => selectedFiles.remove(f))))
-                                    .toList()),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              final result = await FilePicker.pickFiles(
-                                  type: FileType.image,
-                                  allowMultiple: true,
-                                  withData: true);
-                              if (result != null) {
-                                setDialogState(
-                                    () => selectedFiles.addAll(result.files));
-                              }
-                            },
-                            icon: const Icon(Icons.add_a_photo_rounded),
-                            label: const Text('اختيار صور'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary.withOpacity(0.08),
-                              foregroundColor: AppColors.primary,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
+                          DropdownButtonFormField<String>(
+                            value: type,
+                            items: AppStrings.propertyTypes
+                                .map(
+                                  (t) => DropdownMenuItem(
+                                    value: t,
+                                    child: Text(t),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) => setDialogState(() => type = v!),
+                            decoration: InputDecoration(
+                              labelText: 'النوع',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                           ),
                         ],
+                        const SizedBox(height: 16),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: priceController,
+                                  decoration: InputDecoration(
+                                    labelText: purpose == 'بيع'
+                                        ? 'سعر البيع (ج.م)'
+                                        : 'الإيجار الشهري (ج.م)',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: areaController,
+                                  decoration: InputDecoration(
+                                    labelText: 'المساحة (م²)',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(
+                            controller: priceController,
+                            decoration: InputDecoration(
+                              labelText: purpose == 'بيع'
+                                  ? 'سعر البيع (ج.م)'
+                                  : 'الإيجار الشهري (ج.م)',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: areaController,
+                            decoration: InputDecoration(
+                              labelText: 'المساحة (م²)',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        if (type != 'أرض')
+                          if (isDesktop)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: roomsController,
+                                    decoration: InputDecoration(
+                                      labelText: 'الغرف',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: bathroomsController,
+                                    decoration: InputDecoration(
+                                      labelText: 'الحمامات',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: floorController,
+                                    decoration: InputDecoration(
+                                      labelText: 'الدور',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                              ],
+                            )
+                          else ...[
+                            TextFormField(
+                              controller: roomsController,
+                              decoration: InputDecoration(
+                                labelText: 'الغرف',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: bathroomsController,
+                              decoration: InputDecoration(
+                                labelText: 'الحمامات',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: floorController,
+                              decoration: InputDecoration(
+                                labelText: 'الدور',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ],
+                        const SizedBox(height: 16),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              if (targetPurpose == 'استثمار' ||
+                                  type == 'محل تجاري' ||
+                                  type == 'عمارة كاملة')
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: roiController,
+                                    decoration: InputDecoration(
+                                      labelText: 'العائد ROI %',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                              if (targetPurpose == 'استثمار' ||
+                                  type == 'محل تجاري' ||
+                                  type == 'عمارة كاملة')
+                                const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: yearController,
+                                  decoration: InputDecoration(
+                                    labelText: 'سنة البناء',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          if (targetPurpose == 'استثمار' ||
+                              type == 'محل تجاري' ||
+                              type == 'عمارة كاملة')
+                            TextFormField(
+                              controller: roiController,
+                              decoration: InputDecoration(
+                                labelText: 'العائد ROI %',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          if (targetPurpose == 'استثمار' ||
+                              type == 'محل تجاري' ||
+                              type == 'عمارة كاملة')
+                            const SizedBox(height: 12),
+                          TextFormField(
+                            controller: yearController,
+                            decoration: InputDecoration(
+                              labelText: 'سنة البناء',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        const Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'المرافق والخدمات:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: AppStrings.availableAmenities.map((
+                            amenity,
+                          ) {
+                            final isSelected = selectedAmenities.contains(
+                              amenity,
+                            );
+                            return FilterChip(
+                              label: Text(
+                                amenity,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              selected: isSelected,
+                              selectedColor: AppColors.primary.withOpacity(
+                                0.15,
+                              ),
+                              checkmarkColor: AppColors.primary,
+                              onSelected: (val) {
+                                setDialogState(() {
+                                  if (val) {
+                                    selectedAmenities.add(amenity);
+                                  } else {
+                                    selectedAmenities.remove(amenity);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: descController,
+                          decoration: InputDecoration(
+                            labelText: 'وصف إضافي للعقار',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: videoUrlController,
+                          decoration: InputDecoration(
+                            labelText:
+                                'رابط فيديو المعاينة (YouTube / Vimeo / رابط مباشر) 🎥',
+                            hintText: 'https://www.youtube.com/watch?v=...',
+                            prefixIcon: const Icon(
+                              Icons.video_library_rounded,
+                              color: AppColors.primary,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[200]!),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              const Text(
+                                'صور العقار 📸',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 12),
+                              if (selectedFiles.isNotEmpty)
+                                Wrap(
+                                  spacing: 8,
+                                  children: selectedFiles
+                                      .map(
+                                        (f) => Chip(
+                                          label: Text(f.name),
+                                          onDeleted: () => setDialogState(
+                                            () => selectedFiles.remove(f),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await FilePicker.pickFiles(
+                                    type: FileType.image,
+                                    allowMultiple: true,
+                                    withData: true,
+                                  );
+                                  if (result != null) {
+                                    setDialogState(
+                                      () => selectedFiles.addAll(result.files),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.add_a_photo_rounded),
+                                label: const Text('اختيار صور'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary
+                                      .withOpacity(0.08),
+                                  foregroundColor: AppColors.primary,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        CheckboxListTile(
+                          title: const Text('تمييز العقار في الصفحة الرئيسية'),
+                          value: isFeatured,
+                          activeColor: AppColors.primary,
+                          onChanged: (v) =>
+                              setDialogState(() => isFeatured = v!),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                if (isSaving)
+                  const CircularProgressIndicator()
+                else ...[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('إلغاء'),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
                       ),
                     ),
-                    CheckboxListTile(
-                        title: const Text('تمييز العقار في الصفحة الرئيسية'),
-                        value: isFeatured,
-                        activeColor: AppColors.primary,
-                        onChanged: (v) =>
-                            setDialogState(() => isFeatured = v!)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            if (isSaving)
-              const CircularProgressIndicator()
-            else ...[
-              TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('إلغاء')),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 12),
-                ),
-                onPressed: () async {
-                  if (formKey.currentState!.validate()) {
-                    setDialogState(() => isSaving = true);
-                    try {
-                      List<String> imageUrls = [];
-                      if (selectedFiles.isNotEmpty) {
-                        imageUrls = await _uploadImages(selectedFiles);
-                      }
-                      await _supabase.from('properties').insert({
-                        'title': titleController.text.trim(),
-                        'description': descController.text.trim(),
-                        'price': _parseArabicPrice(priceController.text),
-                        'area': _parseArabicArea(areaController.text),
-                        'location': locationController.text.trim(),
-                        'type': type,
-                        'status': status,
-                        'bedrooms': int.tryParse(roomsController.text) ?? 0,
-                        'bathrooms':
-                            int.tryParse(bathroomsController.text) ?? 0,
-                        'floor': int.tryParse(floorController.text) ?? 0,
-                        'build_year':
-                            int.tryParse(yearController.text) ??
+                    onPressed: () async {
+                      if (formKey.currentState!.validate()) {
+                        setDialogState(() => isSaving = true);
+                        try {
+                          List<String> imageUrls = [];
+                          if (selectedFiles.isNotEmpty) {
+                            imageUrls = await _uploadImages(selectedFiles);
+                          }
+                          await _supabase.from('properties').insert({
+                            'title': titleController.text.trim(),
+                            'description': descController.text.trim(),
+                            'price': _parseArabicPrice(priceController.text),
+                            'area': _parseArabicArea(areaController.text),
+                            'location': locationController.text.trim(),
+                            'type': type,
+                            'status': status,
+                            'bedrooms': int.tryParse(roomsController.text) ?? 0,
+                            'bathrooms':
+                                int.tryParse(bathroomsController.text) ?? 0,
+                            'floor': int.tryParse(floorController.text) ?? 0,
+                            'build_year':
+                                int.tryParse(yearController.text) ??
                                 DateTime.now().year,
-                        'roi': double.tryParse(roiController.text) ?? 0.0,
-                        'purpose': purpose,
-                        'payment_method': paymentMethod,
-                        'target_purpose': targetPurpose,
-                        'amenities': selectedAmenities,
-                        'images': imageUrls,
-                        'finishing': finishing,
-                        'folder_name': folderName,
-                        'is_featured': isFeatured,
-                        'video_url': videoUrlController.text.trim(),
-                        'created_at': DateTime.now().toIso8601String(),
-                      });
-                      if (folderName.isNotEmpty && folderName != 'عام') {
-                        await _supabaseService.addFolder(folderName);
-                        if (!_customFolders.contains(folderName)) {
-                          _customFolders.add(folderName);
+                            'roi': double.tryParse(roiController.text) ?? 0.0,
+                            'purpose': purpose,
+                            'payment_method': paymentMethod,
+                            'target_purpose': targetPurpose,
+                            'amenities': selectedAmenities,
+                            'images': imageUrls,
+                            'finishing': finishing,
+                            'folder_name': folderName,
+                            'is_featured': isFeatured,
+                            'video_url': videoUrlController.text.trim(),
+                            'created_at': DateTime.now().toIso8601String(),
+                          });
+                          if (folderName.isNotEmpty && folderName != 'عام') {
+                            await _supabaseService.addFolder(folderName);
+                            if (!_customFolders.contains(folderName)) {
+                              _customFolders.add(folderName);
+                            }
+                          }
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('تم نشر العقار بنجاح ✅'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                            _loadDashboardData();
+                          }
+                        } catch (e) {
+                          setDialogState(() => isSaving = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('خطأ: $e'),
+                                backgroundColor: AppColors.danger,
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                          }
                         }
                       }
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('تم نشر العقار بنجاح ✅'),
-                            backgroundColor: AppColors.success,
-                          ),
-                        );
-                        _loadDashboardData();
-                      }
-                    } catch (e) {
-                      setDialogState(() => isSaving = false);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text('خطأ: $e'),
-                            backgroundColor: AppColors.danger,
-                            duration: const Duration(seconds: 5)));
-                      }
-                    }
-                  }
-                },
-                child: const Text('حفظ ونشر العقار',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ]
-          ],)));
-
-}
-
-  );
-}
+                    },
+                    child: const Text(
+                      'حفظ ونشر العقار',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
   int _parseArabicPrice(String input) {
@@ -3608,13 +4428,23 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     // Direct clean number check e.g. "3000000" or "3,000,000"
     String cleanDigitsOnly = text.replaceAll(',', '').replaceAll(' ', '');
-    final directVal = int.tryParse(cleanDigitsOnly) ?? double.tryParse(cleanDigitsOnly)?.round();
+    final directVal =
+        int.tryParse(cleanDigitsOnly) ??
+        double.tryParse(cleanDigitsOnly)?.round();
     if (directVal != null) return directVal;
 
     double multiplier = 1;
-    if (text.contains('مليون') || text.contains('ملايين') || text.contains('مليونين') || text.contains('مليونان')) {
+    if (text.contains('مليون') ||
+        text.contains('ملايين') ||
+        text.contains('مليونين') ||
+        text.contains('مليونان')) {
       multiplier = 1000000;
-    } else if (text.contains('ألف') || text.contains('الف') || text.contains('آلاف') || text.contains('الاف') || text.contains('ك') || text.contains('k')) {
+    } else if (text.contains('ألف') ||
+        text.contains('الف') ||
+        text.contains('آلاف') ||
+        text.contains('الاف') ||
+        text.contains('ك') ||
+        text.contains('k')) {
       multiplier = 1000;
     }
 
@@ -3636,7 +4466,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       }
     }
 
-    if (text.contains('ونص') || text.contains('و نص') || text.contains('ونصف') || text.contains('و نصف')) {
+    if (text.contains('ونص') ||
+        text.contains('و نص') ||
+        text.contains('ونصف') ||
+        text.contains('و نصف')) {
       baseValue += 0.5;
     } else if (text.contains('وربع') || text.contains('و ربع')) {
       baseValue += 0.25;
@@ -3644,7 +4477,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       baseValue += 0.75;
     }
 
-    if (multiplier == 1 && baseValue > 0 && !text.contains('الف') && !text.contains('ألف')) {
+    if (multiplier == 1 &&
+        baseValue > 0 &&
+        !text.contains('الف') &&
+        !text.contains('ألف')) {
       if (text.contains('م') || text.contains('مليون')) {
         multiplier = 1000000;
       }
@@ -3672,18 +4508,21 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ─── Properties Tab ─────────────────────────────────────────────────────────
   Widget _buildPropertiesTab() {
     List<Property> filteredProps = _properties.where((p) {
-      final matchesQuery = _propertySearchQuery.isEmpty ||
+      final matchesQuery =
+          _propertySearchQuery.isEmpty ||
           p.title.contains(_propertySearchQuery) ||
           p.location.contains(_propertySearchQuery) ||
           p.city.contains(_propertySearchQuery);
 
-      final matchesStatus = _propertyStatusFilter == 'الكل' ||
-          p.status == _propertyStatusFilter;
+      final matchesStatus =
+          _propertyStatusFilter == 'الكل' || p.status == _propertyStatusFilter;
 
-      final matchesFinishing = _propertyFinishingFilter == 'الكل' ||
+      final matchesFinishing =
+          _propertyFinishingFilter == 'الكل' ||
           p.finishing.contains(_propertyFinishingFilter);
 
-      final matchesFolder = _propertyFolderFilter == 'الكل' ||
+      final matchesFolder =
+          _propertyFolderFilter == 'الكل' ||
           p.folderName.trim() == _propertyFolderFilter.trim() ||
           p.folderName.contains(_propertyFolderFilter) ||
           p.location.contains(_propertyFolderFilter) ||
@@ -3715,53 +4554,85 @@ class _DashboardScreenState extends State<DashboardScreen>
                   children: [
                     Expanded(
                       child: TextField(
-                        onChanged: (val) => setState(() => _propertySearchQuery = val),
+                        onChanged: (val) =>
+                            setState(() => _propertySearchQuery = val),
                         decoration: InputDecoration(
-                          hintText: MediaQuery.of(context).size.width > 600 ? 'ابحث باسم العقار، المنطقة، المالك، أو الكود...' : 'بحث عن عقار...',
-                          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          hintText: MediaQuery.of(context).size.width > 600
+                              ? 'ابحث باسم العقار، المنطقة، المالك، أو الكود...'
+                              : 'بحث عن عقار...',
+                          prefixIcon: const Icon(
+                            Icons.search_rounded,
+                            color: AppColors.primary,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
                           filled: true,
                           fillColor: AppColors.surfaceSubtle,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide: const BorderSide(
+                              color: AppColors.border,
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide(color: AppColors.border.withOpacity(0.6)),
+                            borderSide: BorderSide(
+                              color: AppColors.border.withOpacity(0.6),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                            borderSide: const BorderSide(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton.icon(
-                      onPressed: () => setState(() => _showAdvancedFilters = !_showAdvancedFilters),
-                      icon: Icon(
-                        _showAdvancedFilters ? Icons.filter_list_off_rounded : Icons.filter_list_rounded,
-                        size: 18,
-                        color: _showAdvancedFilters ? Colors.white : AppColors.primary,
+                      onPressed: () => setState(
+                        () => _showAdvancedFilters = !_showAdvancedFilters,
                       ),
-                      label: MediaQuery.of(context).size.width > 700 
+                      icon: Icon(
+                        _showAdvancedFilters
+                            ? Icons.filter_list_off_rounded
+                            : Icons.filter_list_rounded,
+                        size: 18,
+                        color: _showAdvancedFilters
+                            ? Colors.white
+                            : AppColors.primary,
+                      ),
+                      label: MediaQuery.of(context).size.width > 700
                           ? Text(
-                              _showAdvancedFilters ? 'فلاتر متقدمة ▴' : 'فلاتر متقدمة ▾',
+                              _showAdvancedFilters
+                                  ? 'فلاتر متقدمة ▴'
+                                  : 'فلاتر متقدمة ▾',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color: _showAdvancedFilters ? Colors.white : AppColors.primary,
+                                color: _showAdvancedFilters
+                                    ? Colors.white
+                                    : AppColors.primary,
                               ),
                             )
                           : const SizedBox.shrink(),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _showAdvancedFilters ? AppColors.primary : AppColors.primary.withOpacity(0.1),
-                        foregroundColor: _showAdvancedFilters ? Colors.white : AppColors.primary,
+                        backgroundColor: _showAdvancedFilters
+                            ? AppColors.primary
+                            : AppColors.primary.withOpacity(0.1),
+                        foregroundColor: _showAdvancedFilters
+                            ? Colors.white
+                            : AppColors.primary,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(
-                          horizontal: MediaQuery.of(context).size.width > 700 ? 16 : 12,
-                          vertical: 14
+                          horizontal: MediaQuery.of(context).size.width > 700
+                              ? 16
+                              : 12,
+                          vertical: 14,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
@@ -3782,16 +4653,30 @@ class _DashboardScreenState extends State<DashboardScreen>
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.folder_special_rounded, size: 14, color: AppColors.primary),
+                            Icon(
+                              Icons.folder_special_rounded,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
                             SizedBox(width: 4),
-                            Text('الفولدرات:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.primary)),
+                            Text(
+                              'الفولدرات:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: AppColors.primary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -3811,15 +4696,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     selectedColor: AppColors.primary,
                                     backgroundColor: AppColors.surfaceSubtle,
                                     labelStyle: TextStyle(
-                                      color: isSel ? Colors.white : AppColors.textSecondary,
-                                      fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                                      color: isSel
+                                          ? Colors.white
+                                          : AppColors.textSecondary,
+                                      fontWeight: isSel
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
                                       fontSize: 12,
                                     ),
-                                    onSelected: (_) => setState(() => _propertyFolderFilter = fld),
+                                    onSelected: (_) => setState(
+                                      () => _propertyFolderFilter = fld,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(18),
                                       side: BorderSide(
-                                        color: isSel ? AppColors.primary : AppColors.border,
+                                        color: isSel
+                                            ? AppColors.primary
+                                            : AppColors.border,
                                       ),
                                     ),
                                   ),
@@ -3830,17 +4723,33 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 onTap: _showAddFolderDialog,
                                 borderRadius: BorderRadius.circular(18),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppColors.success.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                                    border: Border.all(
+                                      color: AppColors.success.withOpacity(0.3),
+                                    ),
                                   ),
                                   child: const Row(
                                     children: [
-                                      Icon(Icons.add_rounded, size: 14, color: AppColors.success),
+                                      Icon(
+                                        Icons.add_rounded,
+                                        size: 14,
+                                        color: AppColors.success,
+                                      ),
                                       SizedBox(width: 4),
-                                      Text('+ فولدر جديد', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.success)),
+                                      Text(
+                                        '+ فولدر جديد',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.success,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -3857,16 +4766,30 @@ class _DashboardScreenState extends State<DashboardScreen>
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.secondary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.home_repair_service_rounded, size: 14, color: AppColors.secondary),
+                            Icon(
+                              Icons.home_repair_service_rounded,
+                              size: 14,
+                              color: AppColors.secondary,
+                            ),
                             SizedBox(width: 4),
-                            Text('التشطيب:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.secondary)),
+                            Text(
+                              'التشطيب:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: AppColors.secondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -3875,30 +4798,40 @@ class _DashboardScreenState extends State<DashboardScreen>
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
-                            children: ['الكل', ...AppStrings.finishingTypes].map((fin) {
-                              final isSel = _propertyFinishingFilter == fin;
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 6),
-                                child: ChoiceChip(
-                                  selected: isSel,
-                                  label: Text(fin),
-                                  selectedColor: AppColors.secondary,
-                                  backgroundColor: AppColors.surfaceSubtle,
-                                  labelStyle: TextStyle(
-                                    color: isSel ? Colors.white : AppColors.textSecondary,
-                                    fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                                    fontSize: 12,
-                                  ),
-                                  onSelected: (_) => setState(() => _propertyFinishingFilter = fin),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                    side: BorderSide(
-                                      color: isSel ? AppColors.secondary : AppColors.border,
+                            children: ['الكل', ...AppStrings.finishingTypes]
+                                .map((fin) {
+                                  final isSel = _propertyFinishingFilter == fin;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 6),
+                                    child: ChoiceChip(
+                                      selected: isSel,
+                                      label: Text(fin),
+                                      selectedColor: AppColors.secondary,
+                                      backgroundColor: AppColors.surfaceSubtle,
+                                      labelStyle: TextStyle(
+                                        color: isSel
+                                            ? Colors.white
+                                            : AppColors.textSecondary,
+                                        fontWeight: isSel
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 12,
+                                      ),
+                                      onSelected: (_) => setState(
+                                        () => _propertyFinishingFilter = fin,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                        side: BorderSide(
+                                          color: isSel
+                                              ? AppColors.secondary
+                                              : AppColors.border,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                                  );
+                                })
+                                .toList(),
                           ),
                         ),
                       ),
@@ -3910,16 +4843,30 @@ class _DashboardScreenState extends State<DashboardScreen>
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.slateDark.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.sell_rounded, size: 14, color: AppColors.slateDark),
+                            Icon(
+                              Icons.sell_rounded,
+                              size: 14,
+                              color: AppColors.slateDark,
+                            ),
                             SizedBox(width: 4),
-                            Text('المعاملة:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.slateDark)),
+                            Text(
+                              'المعاملة:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: AppColors.slateDark,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -3928,30 +4875,40 @@ class _DashboardScreenState extends State<DashboardScreen>
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: Row(
-                            children: ['الكل', 'متاح', 'محجوز', 'مباع', 'مؤجر'].map((st) {
-                              final isSel = _propertyStatusFilter == st;
-                              return Padding(
-                                padding: const EdgeInsets.only(left: 6),
-                                child: ChoiceChip(
-                                  selected: isSel,
-                                  label: Text(st),
-                                  selectedColor: AppColors.slateDark,
-                                  backgroundColor: AppColors.surfaceSubtle,
-                                  labelStyle: TextStyle(
-                                    color: isSel ? Colors.white : AppColors.textSecondary,
-                                    fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                                    fontSize: 12,
-                                  ),
-                                  onSelected: (_) => setState(() => _propertyStatusFilter = st),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(18),
-                                    side: BorderSide(
-                                      color: isSel ? AppColors.slateDark : AppColors.border,
+                            children: ['الكل', 'متاح', 'محجوز', 'مباع', 'مؤجر']
+                                .map((st) {
+                                  final isSel = _propertyStatusFilter == st;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(left: 6),
+                                    child: ChoiceChip(
+                                      selected: isSel,
+                                      label: Text(st),
+                                      selectedColor: AppColors.slateDark,
+                                      backgroundColor: AppColors.surfaceSubtle,
+                                      labelStyle: TextStyle(
+                                        color: isSel
+                                            ? Colors.white
+                                            : AppColors.textSecondary,
+                                        fontWeight: isSel
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        fontSize: 12,
+                                      ),
+                                      onSelected: (_) => setState(
+                                        () => _propertyStatusFilter = st,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(18),
+                                        side: BorderSide(
+                                          color: isSel
+                                              ? AppColors.slateDark
+                                              : AppColors.border,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                                  );
+                                })
+                                .toList(),
                           ),
                         ),
                       ),
@@ -3975,25 +4932,34 @@ class _DashboardScreenState extends State<DashboardScreen>
                   builder: (context, constraints) {
                     final isDesktop = constraints.maxWidth > 750;
                     if (isDesktop) {
-                      final crossAxisCount = constraints.maxWidth > 1200 ? 3 : 2;
+                      final crossAxisCount = constraints.maxWidth > 1200
+                          ? 3
+                          : 2;
                       return GridView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
                         itemCount: filteredProps.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: crossAxisCount,
-                          mainAxisExtent: 440, // Increased from 400 to 440 to prevent overflow with archive banner
+                          mainAxisExtent:
+                              440, // Increased from 400 to 440 to prevent overflow with archive banner
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
                         itemBuilder: (context, index) =>
-                            _buildAdminPropertyCard(filteredProps[index], isGrid: true),
+                            _buildAdminPropertyCard(
+                              filteredProps[index],
+                              isGrid: true,
+                            ),
                       );
                     } else {
                       return ListView.builder(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
                         itemCount: filteredProps.length,
                         itemBuilder: (context, index) =>
-                            _buildAdminPropertyCard(filteredProps[index], isGrid: false),
+                            _buildAdminPropertyCard(
+                              filteredProps[index],
+                              isGrid: false,
+                            ),
                       );
                     }
                   },
@@ -4048,10 +5014,14 @@ class _DashboardScreenState extends State<DashboardScreen>
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => Navigator.pushNamed(context, '/property_details',
-                      arguments: prop),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    '/property_details',
+                    arguments: prop,
+                  ),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -4060,7 +5030,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                         children: [
                           ClipRRect(
                             borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(15)),
+                              top: Radius.circular(15),
+                            ),
                             child: Image.network(
                               prop.mainImage,
                               height: 210,
@@ -4070,8 +5041,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 height: 210,
                                 color: AppColors.surfaceSubtle,
                                 child: const Center(
-                                  child: Icon(Icons.business_rounded,
-                                      color: AppColors.textMuted, size: 40),
+                                  child: Icon(
+                                    Icons.business_rounded,
+                                    color: AppColors.textMuted,
+                                    size: 40,
+                                  ),
                                 ),
                               ),
                             ),
@@ -4082,25 +5056,30 @@ class _DashboardScreenState extends State<DashboardScreen>
                             right: 12,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: statusBg.withOpacity(0.95),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                    color: statusColor.withOpacity(0.3)),
+                                  color: statusColor.withOpacity(0.3),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2))
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
                                 ],
                               ),
                               child: Text(
                                 prop.status,
                                 style: TextStyle(
-                                    color: statusColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12),
+                                  color: statusColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ),
@@ -4112,25 +5091,32 @@ class _DashboardScreenState extends State<DashboardScreen>
                               left: 12,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.slateDark.withOpacity(0.85),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                      color: Colors.white.withOpacity(0.2)),
+                                    color: Colors.white.withOpacity(0.2),
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.folder_rounded,
-                                        size: 12, color: Colors.white),
+                                    const Icon(
+                                      Icons.folder_rounded,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
                                       prop.folderName,
                                       style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
+                                        fontSize: 11,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -4149,24 +5135,29 @@ class _DashboardScreenState extends State<DashboardScreen>
                               Text(
                                 prop.title,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: AppColors.textPrimary),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: AppColors.textPrimary,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  const Icon(Icons.location_on_rounded,
-                                      size: 14, color: AppColors.textMuted),
+                                  const Icon(
+                                    Icons.location_on_rounded,
+                                    size: 14,
+                                    color: AppColors.textMuted,
+                                  ),
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
                                       prop.location,
                                       style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 12),
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -4183,16 +5174,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   Text(
                                     prop.formattedPrice,
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
-                                        fontSize: 15),
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                      fontSize: 15,
+                                    ),
                                   ),
                                   Text(
                                     prop.formattedArea,
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textPrimary,
-                                        fontSize: 13),
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -4204,26 +5197,40 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 child: Row(
                                   children: [
                                     _buildMetricBadge(
-                                        Icons.king_bed_rounded,
-                                        '${prop.bedrooms} غرف'),
+                                      Icons.king_bed_rounded,
+                                      '${prop.bedrooms} غرف',
+                                    ),
                                     const SizedBox(width: 6),
-                                    _buildMetricBadge(Icons.bathtub_rounded,
-                                        '${prop.bathrooms} حمام'),
+                                    _buildMetricBadge(
+                                      Icons.bathtub_rounded,
+                                      '${prop.bathrooms} حمام',
+                                    ),
                                     const SizedBox(width: 6),
+                                    if (prop.floor > 0) ...[
+                                      _buildMetricBadge(
+                                        Icons.layers_rounded,
+                                        'دور ${prop.floor}',
+                                      ),
+                                      const SizedBox(width: 6),
+                                    ],
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color:
-                                            AppColors.secondary.withOpacity(0.1),
+                                        color: AppColors.secondary.withOpacity(
+                                          0.1,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         prop.finishing,
                                         style: const TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.secondary,
-                                            fontWeight: FontWeight.bold),
+                                          fontSize: 11,
+                                          color: AppColors.secondary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -4238,19 +5245,25 @@ class _DashboardScreenState extends State<DashboardScreen>
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 6),
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
                           color: const Color(0xFFE2E8F0),
                           child: const Row(
                             children: [
-                              Icon(Icons.archive_rounded,
-                                  size: 14, color: Color(0xFF64748B)),
+                              Icon(
+                                Icons.archive_rounded,
+                                size: 14,
+                                color: Color(0xFF64748B),
+                              ),
                               SizedBox(width: 6),
                               Text(
                                 'أرشيف داخلي مخفي تلقائياً عن العملاء',
                                 style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF475569)),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF475569),
+                                ),
                               ),
                             ],
                           ),
@@ -4282,10 +5295,14 @@ class _DashboardScreenState extends State<DashboardScreen>
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => Navigator.pushNamed(context, '/property_details',
-                  arguments: prop),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
+              onTap: () => Navigator.pushNamed(
+                context,
+                '/property_details',
+                arguments: prop,
+              ),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(14),
                 child: Row(
@@ -4303,8 +5320,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                               width: 90,
                               height: 90,
                               color: AppColors.surfaceSubtle,
-                              child: const Icon(Icons.business_rounded,
-                                  color: AppColors.textMuted),
+                              child: const Icon(
+                                Icons.business_rounded,
+                                color: AppColors.textMuted,
+                              ),
                             ),
                           ),
                         ),
@@ -4313,8 +5332,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                             child: Container(
                               color: Colors.black26,
                               child: const Center(
-                                child: Icon(Icons.archive_rounded,
-                                    color: Colors.white, size: 20),
+                                child: Icon(
+                                  Icons.archive_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
                             ),
                           ),
@@ -4331,9 +5353,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 child: Text(
                                   prop.title,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                      color: AppColors.textPrimary),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: AppColors.textPrimary,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -4341,19 +5364,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                               const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
                                   color: statusBg,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                      color: statusColor.withOpacity(0.2)),
+                                    color: statusColor.withOpacity(0.2),
+                                  ),
                                 ),
                                 child: Text(
                                   prop.status,
                                   style: TextStyle(
-                                      color: statusColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10),
+                                    color: statusColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ),
                             ],
@@ -4361,15 +5388,19 @@ class _DashboardScreenState extends State<DashboardScreen>
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.location_on_rounded,
-                                  size: 13, color: AppColors.textMuted),
+                              const Icon(
+                                Icons.location_on_rounded,
+                                size: 13,
+                                color: AppColors.textMuted,
+                              ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   prop.location,
                                   style: const TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 12),
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -4378,16 +5409,21 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   prop.folderName != 'عام') ...[
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppColors.slateDark.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
-                                  child: Text('📁 ${prop.folderName}',
-                                      style: const TextStyle(
-                                          fontSize: 10,
-                                          color: AppColors.slateDark,
-                                          fontWeight: FontWeight.bold)),
+                                  child: Text(
+                                    '📁 ${prop.folderName}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.slateDark,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ],
@@ -4401,21 +5437,53 @@ class _DashboardScreenState extends State<DashboardScreen>
                               Text(
                                 prop.formattedPrice,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                    fontSize: 14),
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                  fontSize: 14,
+                                ),
                               ),
-                              Text('📐 ${prop.formattedArea}',
+                              Text(
+                                '📐 ${prop.formattedArea}',
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              _buildMetricBadge(
+                                Icons.king_bed_rounded,
+                                '${prop.bedrooms} غرف',
+                                compact: true,
+                              ),
+                              _buildMetricBadge(
+                                Icons.bathtub_rounded,
+                                '${prop.bathrooms} حمام',
+                                compact: true,
+                              ),
+                              if (prop.floor > 0)
+                                _buildMetricBadge(
+                                  Icons.layers_rounded,
+                                  'دور ${prop.floor}',
+                                  compact: true,
+                                ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  prop.finishing,
                                   style: const TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500)),
-                              _buildMetricBadge(
-                                  Icons.king_bed_rounded, '${prop.bedrooms} غرف',
-                                  compact: true),
-                              _buildMetricBadge(
-                                  Icons.bathtub_rounded, '${prop.bathrooms} حمام',
-                                  compact: true),
+                                    fontSize: 10,
+                                    color: AppColors.secondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -4433,15 +5501,19 @@ class _DashboardScreenState extends State<DashboardScreen>
               color: const Color(0xFFE2E8F0),
               child: const Row(
                 children: [
-                  Icon(Icons.visibility_off_rounded,
-                      size: 13, color: Color(0xFF475569)),
+                  Icon(
+                    Icons.visibility_off_rounded,
+                    size: 13,
+                    color: Color(0xFF475569),
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'مخفي عن العملاء والشات تلقائياً • أرشيف داخلي فقط',
                     style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF475569)),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF475569),
+                    ),
                   ),
                 ],
               ),
@@ -4453,7 +5525,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildMetricBadge(IconData icon, String label, {bool compact = false}) {
+  Widget _buildMetricBadge(
+    IconData icon,
+    String label, {
+    bool compact = false,
+  }) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: compact ? 4 : 6, vertical: 3),
       decoration: BoxDecoration(
@@ -4466,7 +5542,13 @@ class _DashboardScreenState extends State<DashboardScreen>
         children: [
           Icon(icon, size: compact ? 12 : 14, color: AppColors.textSecondary),
           const SizedBox(width: 3),
-          Text(label, style: TextStyle(fontSize: compact ? 10 : 11, color: AppColors.textSecondary)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: compact ? 10 : 11,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
@@ -4480,10 +5562,16 @@ class _DashboardScreenState extends State<DashboardScreen>
           PopupMenuButton<String>(
             tooltip: 'تغيير حالة العقار',
             onSelected: (newStatus) async {
-              final ok = await _supabaseService.updatePropertyStatus(prop.id, newStatus);
+              final ok = await _supabaseService.updatePropertyStatus(
+                prop.id,
+                newStatus,
+              );
               if (ok) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('تم تغيير حالة العقار إلى $newStatus ✅'), backgroundColor: AppColors.success),
+                  SnackBar(
+                    content: Text('تم تغيير حالة العقار إلى $newStatus ✅'),
+                    backgroundColor: AppColors.success,
+                  ),
                 );
                 _loadDashboardData();
               }
@@ -4499,9 +5587,20 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.label_outline_rounded, size: 14, color: AppColors.primary),
+                  Icon(
+                    Icons.label_outline_rounded,
+                    size: 14,
+                    color: AppColors.primary,
+                  ),
                   SizedBox(width: 4),
-                  Text('الحالة ▾', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  Text(
+                    'الحالة ▾',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -4510,20 +5609,32 @@ class _DashboardScreenState extends State<DashboardScreen>
           IconButton(
             visualDensity: VisualDensity.compact,
             tooltip: 'تعديل العقار',
-            icon: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+            icon: const Icon(
+              Icons.edit_outlined,
+              color: AppColors.primary,
+              size: 20,
+            ),
             onPressed: () => _showEditPropertyDialog(prop),
           ),
           IconButton(
             visualDensity: VisualDensity.compact,
             tooltip: 'مشاركة على واتساب',
-            icon: const Icon(Icons.share_rounded, color: Color(0xFF25D366), size: 20),
+            icon: const Icon(
+              Icons.share_rounded,
+              color: Color(0xFF25D366),
+              size: 20,
+            ),
             onPressed: () => _sharePropertyWhatsApp(prop),
           ),
           const Spacer(),
           IconButton(
             visualDensity: VisualDensity.compact,
             tooltip: 'حذف العقار',
-            icon: const Icon(Icons.delete_outline_rounded, color: AppColors.danger, size: 20),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.danger,
+              size: 20,
+            ),
             onPressed: () => _showDeletePropertyDialog(prop),
           ),
         ],
@@ -4535,14 +5646,24 @@ class _DashboardScreenState extends State<DashboardScreen>
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController(text: prop.title);
     final locationController = TextEditingController(text: prop.location);
-    final priceController = TextEditingController(text: prop.price.toInt().toString());
-    final areaController = TextEditingController(text: prop.area.toInt().toString());
+    final priceController = TextEditingController(
+      text: prop.price.toInt().toString(),
+    );
+    final areaController = TextEditingController(
+      text: prop.area.toInt().toString(),
+    );
     final descController = TextEditingController(text: prop.description);
     final videoUrlController = TextEditingController(text: prop.videoUrl);
-    final roomsController = TextEditingController(text: prop.bedrooms.toString());
-    final bathroomsController = TextEditingController(text: prop.bathrooms.toString());
+    final roomsController = TextEditingController(
+      text: prop.bedrooms.toString(),
+    );
+    final bathroomsController = TextEditingController(
+      text: prop.bathrooms.toString(),
+    );
     final floorController = TextEditingController(text: prop.floor.toString());
-    final yearController = TextEditingController(text: prop.buildYear.toString());
+    final yearController = TextEditingController(
+      text: prop.buildYear.toString(),
+    );
     final roiController = TextEditingController(text: prop.roi.toString());
 
     bool isSaving = false;
@@ -4552,7 +5673,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     String status = prop.status;
     String type = prop.type;
     String finishing = prop.finishing;
-    String folderName = prop.folderName.isNotEmpty ? prop.folderName : (_customFolders.contains(prop.location) ? prop.location : 'عام');
+    String folderName = prop.folderName.isNotEmpty
+        ? prop.folderName
+        : (_customFolders.contains(prop.location) ? prop.location : 'عام');
     bool isFeatured = prop.isFeatured;
     List<String> selectedAmenities = List<String>.from(prop.amenities);
     List<String> currentImages = List<String>.from(prop.images);
@@ -4562,134 +5685,57 @@ class _DashboardScreenState extends State<DashboardScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        final isDesktop = MediaQuery
-            .of(context)
-            .size
-            .width > 900;
+        final isDesktop = MediaQuery.of(context).size.width > 900;
         return Directionality(
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
-            builder: (context, setDialogState) =>
-                AlertDialog(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  title: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                            Icons.edit_note_rounded, color: AppColors.primary,
-                            size: isDesktop ? 24 : 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Text('تعديل بيانات العقار ✏️', style: TextStyle(
-                          fontSize: isDesktop ? 18 : 16,
-                          fontWeight: FontWeight.bold)),
-                    ],
+            builder: (context, setDialogState) => AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.edit_note_rounded,
+                      color: AppColors.primary,
+                      size: isDesktop ? 24 : 20,
+                    ),
                   ),
-                  content: SizedBox(
-                    width: isDesktop ? 800 : MediaQuery
-                        .of(context)
-                        .size
-                        .width * 0.95,
-                    child: Form(
-                      key: formKey,
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            if (isDesktop)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                          color: Colors.grey[100],
-                                          borderRadius: BorderRadius.circular(
-                                              12)),
-                                      child: Row(
-                                        children: [
-                                          const Text('الغرض:'),
-                                          const SizedBox(width: 12),
-                                          ChoiceChip(
-                                            label: const Text('بيع'),
-                                            selected: purpose == 'بيع',
-                                            onSelected: (_) =>
-                                                setDialogState(() =>
-                                                purpose = 'بيع'),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ChoiceChip(
-                                            label: const Text('إيجار'),
-                                            selected: purpose == 'إيجار',
-                                            onSelected: (_) =>
-                                                setDialogState(() =>
-                                                purpose = 'إيجار'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                                      child: Row(
-                                        children: [
-                                          const Text('الدفع:'),
-                                          const SizedBox(width: 12),
-                                          ChoiceChip(
-                                            label: const Text('كاش'),
-                                            selected: paymentMethod == 'كاش',
-                                            onSelected: (val) =>
-                                                setDialogState(() => paymentMethod = 'كاش'),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ChoiceChip(
-                                            label: const Text('تقسيط'),
-                                            selected: paymentMethod == 'تقسيط',
-                                            onSelected: (val) =>
-                                                setDialogState(() => paymentMethod = 'تقسيط'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: DropdownButtonFormField<String>(
-                                      initialValue: [
-                                        'متاح',
-                                        'محجوز',
-                                        'مباع',
-                                        'مؤجر'
-                                      ].contains(status) ? status : 'متاح',
-                                      decoration: const InputDecoration(
-                                          labelText: 'حالة العقار',
-                                          border: OutlineInputBorder()),
-                                      items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
-                                          .map((s) =>
-                                          DropdownMenuItem(
-                                          value: s, child: Text(s)))
-                                          .toList(),
-                                      onChanged: (val) =>
-                                          setDialogState(() => status = val!),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              ...[
-                                Container(
-                                  width: double.infinity,
+                  const SizedBox(width: 12),
+                  Text(
+                    'تعديل بيانات العقار ✏️',
+                    style: TextStyle(
+                      fontSize: isDesktop ? 18 : 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: isDesktop
+                    ? 800
+                    : MediaQuery.of(context).size.width * 0.95,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(12)),
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   child: Row(
                                     children: [
                                       const Text('الغرض:'),
@@ -4697,26 +5743,29 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       ChoiceChip(
                                         label: const Text('بيع'),
                                         selected: purpose == 'بيع',
-                                        onSelected: (_) =>
-                                            setDialogState(() =>
-                                        purpose = 'بيع'),
+                                        onSelected: (_) => setDialogState(
+                                          () => purpose = 'بيع',
+                                        ),
                                       ),
                                       const SizedBox(width: 8),
                                       ChoiceChip(
                                         label: const Text('إيجار'),
                                         selected: purpose == 'إيجار',
-                                        onSelected: (_) =>
-                                            setDialogState(() =>
-                                        purpose = 'إيجار'),
+                                        onSelected: (_) => setDialogState(
+                                          () => purpose = 'إيجار',
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  width: double.infinity,
+                              ),
+                              Expanded(
+                                child: Container(
                                   padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   child: Row(
                                     children: [
                                       const Text('الدفع:'),
@@ -4724,771 +5773,1099 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       ChoiceChip(
                                         label: const Text('كاش'),
                                         selected: paymentMethod == 'كاش',
-                                        onSelected: (val) =>
-                                            setDialogState(() => paymentMethod = 'كاش'),
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'كاش',
+                                        ),
                                       ),
                                       const SizedBox(width: 8),
                                       ChoiceChip(
                                         label: const Text('تقسيط'),
                                         selected: paymentMethod == 'تقسيط',
-                                        onSelected: (val) =>
-                                            setDialogState(() => paymentMethod = 'تقسيط'),
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'تقسيط',
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  initialValue: [
-                                    'متاح',
-                                    'محجوز',
-                                    'مباع',
-                                    'مؤجر'
-                                  ].contains(status) ? status : 'متاح',
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  initialValue:
+                                      [
+                                        'متاح',
+                                        'محجوز',
+                                        'مباع',
+                                        'مؤجر',
+                                      ].contains(status)
+                                      ? status
+                                      : 'متاح',
                                   decoration: const InputDecoration(
-                                      labelText: 'حالة العقار',
-                                      border: OutlineInputBorder()),
+                                    labelText: 'حالة العقار',
+                                    border: OutlineInputBorder(),
+                                  ),
                                   items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
-                                      .map((s) =>
-                                      DropdownMenuItem(
-                                      value: s, child: Text(s)))
+                                      .map(
+                                        (s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(s),
+                                        ),
+                                      )
                                       .toList(),
                                   onChanged: (val) =>
                                       setDialogState(() => status = val!),
                                 ),
-                              ],
-                            const SizedBox(height: 12),
-                            Row(
+                              ),
+                            ],
+                          )
+                        else ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
                               children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.05),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
-                                    child: Row(
-                                      children: [
-                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                        const SizedBox(width: 12),
-                                        ChoiceChip(
-                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'سكن شخصي',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ChoiceChip(
-                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'استثمار',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                const Text('الغرض:'),
+                                const SizedBox(width: 12),
+                                ChoiceChip(
+                                  label: const Text('بيع'),
+                                  selected: purpose == 'بيع',
+                                  onSelected: (_) =>
+                                      setDialogState(() => purpose = 'بيع'),
+                                ),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('إيجار'),
+                                  selected: purpose == 'إيجار',
+                                  onSelected: (_) =>
+                                      setDialogState(() => purpose = 'إيجار'),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            if (isDesktop)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: DropdownButtonFormField<String>(
-                                      value: AppStrings.finishingTypes.contains(
-                                          finishing) ? finishing : AppStrings
-                                          .finishingTypes.first,
-                                      decoration: const InputDecoration(
-                                          labelText: 'مستوى التشطيب ✨',
-                                          border: OutlineInputBorder()),
-                                      items: AppStrings.finishingTypes
-                                          .map((f) =>
-                                          DropdownMenuItem(
-                                          value: f, child: Text(f)))
-                                          .toList(),
-                                      onChanged: (val) =>
-                                          setDialogState(() =>
-                                      finishing = val!),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                                      child: Row(
-                                        children: [
-                                          const Text('الدفع:'),
-                                          const SizedBox(width: 12),
-                                          ChoiceChip(
-                                            label: const Text('كاش'),
-                                            selected: paymentMethod == 'كاش',
-                                            onSelected: (val) =>
-                                                setDialogState(() => paymentMethod = 'كاش'),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ChoiceChip(
-                                            label: const Text('تقسيط'),
-                                            selected: paymentMethod == 'تقسيط',
-                                            onSelected: (val) =>
-                                                setDialogState(() => paymentMethod = 'تقسيط'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: DropdownButtonFormField<String>(
-                                      value: _customFolders.contains(folderName)
-                                          ? folderName
-                                          : (_customFolders
-                                          .where((f) => f != 'الكل')
-                                          .firstOrNull ?? 'عام'),
-                                      decoration: const InputDecoration(
-                                          labelText: 'الفولدر / المنطقة 📁',
-                                          border: OutlineInputBorder()),
-                                      items: _customFolders.where((f) =>
-                                      f != 'الكل')
-                                          .map((f) =>
-                                          DropdownMenuItem(
-                                          value: f, child: Text(f)))
-                                          .toList(),
-                                      onChanged: (val) =>
-                                          setDialogState(() =>
-                                      folderName = val!),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              ...[
-                                DropdownButtonFormField<String>(
-                                  value: AppStrings.finishingTypes.contains(
-                                      finishing) ? finishing : AppStrings
-                                      .finishingTypes.first,
-                                  decoration: const InputDecoration(
-                                      labelText: 'مستوى التشطيب ✨',
-                                      border: OutlineInputBorder()),
-                                  items: AppStrings.finishingTypes
-                                      .map((f) =>
-                                      DropdownMenuItem(
-                                      value: f, child: Text(f)))
-                                      .toList(),
-                                  onChanged: (val) =>
-                                      setDialogState(() => finishing = val!),
-                                ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                                  child: Row(
-                                    children: [
-                                      const Text('الدفع:'),
-                                      const SizedBox(width: 12),
-                                      ChoiceChip(
-                                        label: const Text('كاش'),
-                                        selected: paymentMethod == 'كاش',
-                                        onSelected: (val) =>
-                                            setDialogState(() => paymentMethod = 'كاش'),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      ChoiceChip(
-                                        label: const Text('تقسيط'),
-                                        selected: paymentMethod == 'تقسيط',
-                                        onSelected: (val) =>
-                                            setDialogState(() => paymentMethod = 'تقسيط'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  value: _customFolders.contains(folderName)
-                                      ? folderName
-                                      : (_customFolders
-                                      .where((f) => f != 'الكل')
-                                      .firstOrNull ?? 'عام'),
-                                  decoration: const InputDecoration(
-                                      labelText: 'الفولدر / المنطقة 📁',
-                                      border: OutlineInputBorder()),
-                                  items: _customFolders.where((f) =>
-                                  f != 'الكل')
-                                      .map((f) =>
-                                      DropdownMenuItem(
-                                      value: f, child: Text(f)))
-                                      .toList(),
-                                  onChanged: (val) =>
-                                      setDialogState(() => folderName = val!),
-                                ),
-                              ],
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: titleController,
-                              decoration: const InputDecoration(
-                                  labelText: 'عنوان الإعلان (مطلوب)',
-                                  border: OutlineInputBorder()),
-                              validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            const SizedBox(height: 12),
-                            Row(
+                            child: Row(
                               children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.05),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
-                                    child: Row(
-                                      children: [
-                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                        const SizedBox(width: 12),
-                                        ChoiceChip(
-                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'سكن شخصي',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ChoiceChip(
-                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'استثمار',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
-                                        ),
-                                      ],
-                                    ),
+                                const Text('الدفع:'),
+                                const SizedBox(width: 12),
+                                ChoiceChip(
+                                  label: const Text('كاش'),
+                                  selected: paymentMethod == 'كاش',
+                                  onSelected: (val) => setDialogState(
+                                    () => paymentMethod = 'كاش',
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('تقسيط'),
+                                  selected: paymentMethod == 'تقسيط',
+                                  onSelected: (val) => setDialogState(
+                                    () => paymentMethod = 'تقسيط',
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            if (isDesktop)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: locationController,
-                                      decoration: const InputDecoration(
-                                          labelText: 'الموقع والحي 📍',
-                                          border: OutlineInputBorder()),
-                                      validator: (v) =>
-                                      v!.isEmpty
-                                          ? 'مطلوب'
-                                          : null,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                                      child: Row(
-                                        children: [
-                                          const Text('الدفع:'),
-                                          const SizedBox(width: 12),
-                                          ChoiceChip(
-                                            label: const Text('كاش'),
-                                            selected: paymentMethod == 'كاش',
-                                            onSelected: (val) =>
-                                                setDialogState(() => paymentMethod = 'كاش'),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ChoiceChip(
-                                            label: const Text('تقسيط'),
-                                            selected: paymentMethod == 'تقسيط',
-                                            onSelected: (val) =>
-                                                setDialogState(() => paymentMethod = 'تقسيط'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: DropdownButtonFormField<String>(
-                                      initialValue: [
-                                        'شقة',
-                                        'فيلا',
-                                        'محل تجاري',
-                                        'أرض',
-                                        'مكتب'
-                                      ].contains(type) ? type : 'شقة',
-                                      decoration: const InputDecoration(
-                                          labelText: 'النوع',
-                                          border: OutlineInputBorder()),
-                                      items: [
-                                        'شقة',
-                                        'فيلا',
-                                        'محل تجاري',
-                                        'أرض',
-                                        'مكتب'
-                                      ]
-                                          .map((t) =>
-                                          DropdownMenuItem(
-                                          value: t, child: Text(t)))
-                                          .toList(),
-                                      onChanged: (val) =>
-                                          setDialogState(() => type = val!),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              ...[
-                                TextFormField(
-                                  controller: locationController,
-                                  decoration: const InputDecoration(
-                                      labelText: 'الموقع والحي 📍',
-                                      border: OutlineInputBorder()),
-                                  validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                                ),
-                                const SizedBox(height: 12),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                                  child: Row(
-                                    children: [
-                                      const Text('الدفع:'),
-                                      const SizedBox(width: 12),
-                                      ChoiceChip(
-                                        label: const Text('كاش'),
-                                        selected: paymentMethod == 'كاش',
-                                        onSelected: (val) =>
-                                            setDialogState(() => paymentMethod = 'كاش'),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      ChoiceChip(
-                                        label: const Text('تقسيط'),
-                                        selected: paymentMethod == 'تقسيط',
-                                        onSelected: (val) =>
-                                            setDialogState(() => paymentMethod = 'تقسيط'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  initialValue: [
-                                    'شقة',
-                                    'فيلا',
-                                    'محل تجاري',
-                                    'أرض',
-                                    'مكتب'
-                                  ].contains(type) ? type : 'شقة',
-                                  decoration: const InputDecoration(
-                                      labelText: 'النوع',
-                                      border: OutlineInputBorder()),
-                                  items: [
-                                    'شقة',
-                                    'فيلا',
-                                    'محل تجاري',
-                                    'أرض',
-                                    'مكتب'
-                                  ]
-                                      .map((t) =>
-                                      DropdownMenuItem(
-                                      value: t, child: Text(t)))
-                                      .toList(),
-                                  onChanged: (val) =>
-                                      setDialogState(() => type = val!),
-                                ),
-                              ],
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.05),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
-                                    child: Row(
-                                      children: [
-                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                        const SizedBox(width: 12),
-                                        ChoiceChip(
-                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'سكن شخصي',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ChoiceChip(
-                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'استثمار',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue:
+                                [
+                                  'متاح',
+                                  'محجوز',
+                                  'مباع',
+                                  'مؤجر',
+                                ].contains(status)
+                                ? status
+                                : 'متاح',
+                            decoration: const InputDecoration(
+                              labelText: 'حالة العقار',
+                              border: OutlineInputBorder(),
                             ),
-                            const SizedBox(height: 12),
-                            if (isDesktop)
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: priceController,
-                                      decoration: const InputDecoration(
-                                          labelText: 'سعر البيع/الإيجار (ج.م)',
-                                          border: OutlineInputBorder()),
-                                    ),
+                            items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
+                                .map(
+                                  (s) => DropdownMenuItem(
+                                    value: s,
+                                    child: Text(s),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: areaController,
-                                      decoration: const InputDecoration(
-                                          labelText: 'المساحة (م²)',
-                                          border: OutlineInputBorder()),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            else
-                              ...[
-                                TextFormField(
-                                  controller: priceController,
-                                  decoration: const InputDecoration(
-                                      labelText: 'سعر البيع/الإيجار (ج.م)',
-                                      border: OutlineInputBorder()),
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: areaController,
-                                  decoration: const InputDecoration(
-                                      labelText: 'المساحة (م²)',
-                                      border: OutlineInputBorder()),
-                                ),
-                              ],
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.05),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: Colors.blue.withOpacity(0.2))),
-                                    child: Row(
-                                      children: [
-                                        const Text('نوع الاستخدام:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                        const SizedBox(width: 12),
-                                        ChoiceChip(
-                                          label: const Text('سكن شخصي', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'سكن شخصي',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'سكن شخصي'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        ChoiceChip(
-                                          label: const Text('استثمار', style: TextStyle(fontSize: 12)),
-                                          selected: targetPurpose == 'استثمار',
-                                          onSelected: (val) => setDialogState(() => targetPurpose = 'استثمار'),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            if (isDesktop)
-                              Row(
-                                children: [
-                                  Expanded(child: TextFormField(
-                                      controller: roomsController,
-                                      decoration: const InputDecoration(
-                                          labelText: 'الغرف',
-                                          border: OutlineInputBorder()))),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: TextFormField(
-                                      controller: bathroomsController,
-                                      decoration: const InputDecoration(
-                                          labelText: 'الحمامات',
-                                          border: OutlineInputBorder()))),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: TextFormField(
-                                      controller: floorController,
-                                      decoration: const InputDecoration(
-                                          labelText: 'الدور',
-                                          border: OutlineInputBorder()))),
-                                ],
-                              )
-                            else
-                              ...[
-                                TextFormField(controller: roomsController,
-                                    decoration: const InputDecoration(
-                                        labelText: 'الغرف',
-                                        border: OutlineInputBorder())),
-                                const SizedBox(height: 12),
-                                TextFormField(controller: bathroomsController,
-                                    decoration: const InputDecoration(
-                                        labelText: 'الحمامات',
-                                        border: OutlineInputBorder())),
-                                const SizedBox(height: 12),
-                                TextFormField(controller: floorController,
-                                    decoration: const InputDecoration(
-                                        labelText: 'الدور',
-                                        border: OutlineInputBorder())),
-                              ],
-                              const SizedBox(height: 16),
-                              if (isDesktop)
-                                Row(
-                                  children: [
-                                    if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                                      Expanded(
-                                          child: TextFormField(
-                                              controller: roiController,
-                                              decoration: const InputDecoration(labelText: 'العائد ROI %', border: OutlineInputBorder()))),
-                                    if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                                      const SizedBox(width: 12),
-                                    Expanded(
-                                        child: TextFormField(
-                                            controller: yearController,
-                                            decoration: const InputDecoration(labelText: 'سنة البناء', border: OutlineInputBorder()))),
-                                  ],
                                 )
-                              else ...[
-                                if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                                  TextFormField(
-                                      controller: roiController,
-                                      decoration: const InputDecoration(labelText: 'العائد ROI %', border: OutlineInputBorder())),
-                                if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
-                                  const SizedBox(height: 12),
-                                TextFormField(
-                                    controller: yearController,
-                                    decoration: const InputDecoration(labelText: 'سنة البناء', border: OutlineInputBorder())),
-                              ],
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: descController,
-                              maxLines: 3,
-                              decoration: const InputDecoration(
-                                  labelText: 'وصف إضافي للعقار',
-                                  border: OutlineInputBorder()),
-                            ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: videoUrlController,
-                              decoration: const InputDecoration(
-                                labelText: 'رابط فيديو المعاينة (YouTube / Vimeo / رابط مباشر) 🎥',
-                                hintText: 'https://www.youtube.com/watch?v=...',
-                                prefixIcon: Icon(Icons.video_library_rounded,
-                                    color: AppColors.primary),
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            // ─── Property Images Section ─────────────────────────────
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF8FAFC),
-                                border: Border.all(color: Colors.grey[300]!),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Row(
-                                    children: [
-                                      Icon(Icons.collections_rounded,
-                                          color: AppColors.primary, size: 18),
-                                      SizedBox(width: 8),
-                                      Text('إدارة صور العقار 📸',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14)),
-                                    ],
+                                .toList(),
+                            onChanged: (val) =>
+                                setDialogState(() => status = val!),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.2),
                                   ),
-                                  const SizedBox(height: 12),
-                                  // Existing Images Preview
-                                  if (currentImages.isNotEmpty) ...[
+                                ),
+                                child: Row(
+                                  children: [
                                     const Text(
-                                        'الصور الحالية (اضغط ✖ لإزالة الصورة):',
-                                        style: TextStyle(
-                                            fontSize: 12, color: Colors.grey)),
-                                    const SizedBox(height: 8),
-                                    SizedBox(
-                                      height: 85,
-                                      child: ListView.builder(
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount: currentImages.length,
-                                        itemBuilder: (context, index) {
-                                          final imgUrl = currentImages[index];
-                                          return Stack(
-                                            children: [
-                                              Container(
-                                                margin: const EdgeInsets.only(
-                                                    left: 8),
-                                                width: 85,
-                                                height: 85,
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius
-                                                      .circular(10),
-                                                  image: DecorationImage(
-                                                      image: NetworkImage(
-                                                          imgUrl),
-                                                      fit: BoxFit.cover),
-                                                ),
-                                              ),
-                                              Positioned(
-                                                top: 3,
-                                                left: 3,
-                                                child: InkWell(
-                                                  onTap: () =>
-                                                      setDialogState(() =>
-                                                          currentImages
-                                                              .removeAt(index)),
-                                                  child: Container(
-                                                    padding: const EdgeInsets
-                                                        .all(3),
-                                                    decoration: const BoxDecoration(
-                                                        color: Colors.red,
-                                                        shape: BoxShape.circle),
-                                                    child: const Icon(
-                                                        Icons.close,
-                                                        color: Colors.white,
-                                                        size: 14),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
+                                      'نوع الاستخدام:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
-                                  ],
-                                  // New Selected Files
-                                  if (newFiles.isNotEmpty) ...[
-                                    const Text('صور جديدة مختارة للإضافة:',
-                                        style: TextStyle(
-                                            fontSize: 12, color: Colors.grey)),
-                                    const SizedBox(height: 6),
-                                    Wrap(
-                                      spacing: 8,
-                                      children: newFiles
-                                          .map((f) =>
-                                          Chip(
-                                            label: Text(f.name,
-                                                style: const TextStyle(
-                                                    fontSize: 11)),
-                                            onDeleted: () =>
-                                                setDialogState(() =>
-                                                    newFiles.remove(f)),
-                                          ))
-                                          .toList(),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'سكن شخصي',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'سكن شخصي',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'سكن شخصي',
+                                      ),
                                     ),
-                                    const SizedBox(height: 10),
-                                  ],
-                                  // Pick Images Button
-                                  ElevatedButton.icon(
-                                    onPressed: () async {
-                                      final result = await FilePicker.pickFiles(
-                                        type: FileType.image,
-                                        allowMultiple: true,
-                                        withData: true,
-                                      );
-                                      if (result != null) {
-                                        setDialogState(() =>
-                                            newFiles.addAll(result.files));
-                                      }
-                                    },
-                                    icon: const Icon(
-                                        Icons.add_photo_alternate_rounded,
-                                        size: 18),
-                                    label: const Text(
-                                        'إضافة صور جديدة من الجهاز'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.secondary,
-                                      foregroundColor: Colors.white,
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'استثمار',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'استثمار',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'استثمار',
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value:
+                                      AppStrings.finishingTypes.contains(
+                                        finishing,
+                                      )
+                                      ? finishing
+                                      : AppStrings.finishingTypes.first,
+                                  decoration: const InputDecoration(
+                                    labelText: 'مستوى التشطيب ✨',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: AppStrings.finishingTypes
+                                      .map(
+                                        (f) => DropdownMenuItem(
+                                          value: f,
+                                          child: Text(f),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (val) =>
+                                      setDialogState(() => finishing = val!),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Text('الدفع:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('كاش'),
+                                        selected: paymentMethod == 'كاش',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'كاش',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('تقسيط'),
+                                        selected: paymentMethod == 'تقسيط',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'تقسيط',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: _customFolders.contains(folderName)
+                                      ? folderName
+                                      : (_customFolders
+                                                .where((f) => f != 'الكل')
+                                                .firstOrNull ??
+                                            'عام'),
+                                  decoration: const InputDecoration(
+                                    labelText: 'الفولدر / المنطقة 📁',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: _customFolders
+                                      .where((f) => f != 'الكل')
+                                      .map(
+                                        (f) => DropdownMenuItem(
+                                          value: f,
+                                          child: Text(f),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (val) =>
+                                      setDialogState(() => folderName = val!),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          DropdownButtonFormField<String>(
+                            value: AppStrings.finishingTypes.contains(finishing)
+                                ? finishing
+                                : AppStrings.finishingTypes.first,
+                            decoration: const InputDecoration(
+                              labelText: 'مستوى التشطيب ✨',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: AppStrings.finishingTypes
+                                .map(
+                                  (f) => DropdownMenuItem(
+                                    value: f,
+                                    child: Text(f),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setDialogState(() => finishing = val!),
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Text('الدفع:'),
+                                const SizedBox(width: 12),
+                                ChoiceChip(
+                                  label: const Text('كاش'),
+                                  selected: paymentMethod == 'كاش',
+                                  onSelected: (val) => setDialogState(
+                                    () => paymentMethod = 'كاش',
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('تقسيط'),
+                                  selected: paymentMethod == 'تقسيط',
+                                  onSelected: (val) => setDialogState(
+                                    () => paymentMethod = 'تقسيط',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _customFolders.contains(folderName)
+                                ? folderName
+                                : (_customFolders
+                                          .where((f) => f != 'الكل')
+                                          .firstOrNull ??
+                                      'عام'),
+                            decoration: const InputDecoration(
+                              labelText: 'الفولدر / المنطقة 📁',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: _customFolders
+                                .where((f) => f != 'الكل')
+                                .map(
+                                  (f) => DropdownMenuItem(
+                                    value: f,
+                                    child: Text(f),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setDialogState(() => folderName = val!),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: titleController,
+                          decoration: const InputDecoration(
+                            labelText: 'عنوان الإعلان (مطلوب)',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Text(
+                                      'نوع الاستخدام:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'سكن شخصي',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'سكن شخصي',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'سكن شخصي',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'استثمار',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'استثمار',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'استثمار',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: locationController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'الموقع والحي 📍',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Text('الدفع:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('كاش'),
+                                        selected: paymentMethod == 'كاش',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'كاش',
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('تقسيط'),
+                                        selected: paymentMethod == 'تقسيط',
+                                        onSelected: (val) => setDialogState(
+                                          () => paymentMethod = 'تقسيط',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  initialValue:
+                                      [
+                                        'شقة',
+                                        'فيلا',
+                                        'محل تجاري',
+                                        'أرض',
+                                        'مكتب',
+                                      ].contains(type)
+                                      ? type
+                                      : 'شقة',
+                                  decoration: const InputDecoration(
+                                    labelText: 'النوع',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items:
+                                      [
+                                            'شقة',
+                                            'فيلا',
+                                            'محل تجاري',
+                                            'أرض',
+                                            'مكتب',
+                                          ]
+                                          .map(
+                                            (t) => DropdownMenuItem(
+                                              value: t,
+                                              child: Text(t),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged: (val) =>
+                                      setDialogState(() => type = val!),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(
+                            controller: locationController,
+                            decoration: const InputDecoration(
+                              labelText: 'الموقع والحي 📍',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                          ),
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                const Text('الدفع:'),
+                                const SizedBox(width: 12),
+                                ChoiceChip(
+                                  label: const Text('كاش'),
+                                  selected: paymentMethod == 'كاش',
+                                  onSelected: (val) => setDialogState(
+                                    () => paymentMethod = 'كاش',
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('تقسيط'),
+                                  selected: paymentMethod == 'تقسيط',
+                                  onSelected: (val) => setDialogState(
+                                    () => paymentMethod = 'تقسيط',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue:
+                                [
+                                  'شقة',
+                                  'فيلا',
+                                  'محل تجاري',
+                                  'أرض',
+                                  'مكتب',
+                                ].contains(type)
+                                ? type
+                                : 'شقة',
+                            decoration: const InputDecoration(
+                              labelText: 'النوع',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب']
+                                .map(
+                                  (t) => DropdownMenuItem(
+                                    value: t,
+                                    child: Text(t),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setDialogState(() => type = val!),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Text(
+                                      'نوع الاستخدام:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'سكن شخصي',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'سكن شخصي',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'سكن شخصي',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'استثمار',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'استثمار',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'استثمار',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: priceController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'سعر البيع/الإيجار (ج.م)',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: areaController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'المساحة (م²)',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(
+                            controller: priceController,
+                            decoration: const InputDecoration(
+                              labelText: 'سعر البيع/الإيجار (ج.م)',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: areaController,
+                            decoration: const InputDecoration(
+                              labelText: 'المساحة (م²)',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Text(
+                                      'نوع الاستخدام:',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'سكن شخصي',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'سكن شخصي',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'سكن شخصي',
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text(
+                                        'استثمار',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      selected: targetPurpose == 'استثمار',
+                                      onSelected: (val) => setDialogState(
+                                        () => targetPurpose = 'استثمار',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: roomsController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'الغرف',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: bathroomsController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'الحمامات',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: floorController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'الدور',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(
+                            controller: roomsController,
+                            decoration: const InputDecoration(
+                              labelText: 'الغرف',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: bathroomsController,
+                            decoration: const InputDecoration(
+                              labelText: 'الحمامات',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: floorController,
+                            decoration: const InputDecoration(
+                              labelText: 'الدور',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              if (targetPurpose == 'استثمار' ||
+                                  type == 'محل تجاري' ||
+                                  type == 'عمارة كاملة')
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: roiController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'العائد ROI %',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                              if (targetPurpose == 'استثمار' ||
+                                  type == 'محل تجاري' ||
+                                  type == 'عمارة كاملة')
+                                const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: yearController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'سنة البناء',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          if (targetPurpose == 'استثمار' ||
+                              type == 'محل تجاري' ||
+                              type == 'عمارة كاملة')
+                            TextFormField(
+                              controller: roiController,
+                              decoration: const InputDecoration(
+                                labelText: 'العائد ROI %',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          if (targetPurpose == 'استثمار' ||
+                              type == 'محل تجاري' ||
+                              type == 'عمارة كاملة')
+                            const SizedBox(height: 12),
+                          TextFormField(
+                            controller: yearController,
+                            decoration: const InputDecoration(
+                              labelText: 'سنة البناء',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: descController,
+                          maxLines: 3,
+                          decoration: const InputDecoration(
+                            labelText: 'وصف إضافي للعقار',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: videoUrlController,
+                          decoration: const InputDecoration(
+                            labelText:
+                                'رابط فيديو المعاينة (YouTube / Vimeo / رابط مباشر) 🎥',
+                            hintText: 'https://www.youtube.com/watch?v=...',
+                            prefixIcon: Icon(
+                              Icons.video_library_rounded,
+                              color: AppColors.primary,
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // ─── Property Images Section ─────────────────────────────
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(
+                                    Icons.collections_rounded,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'إدارة صور العقار 📸',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              // Existing Images Preview
+                              if (currentImages.isNotEmpty) ...[
+                                const Text(
+                                  'الصور الحالية (اضغط ✖ لإزالة الصورة):',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  height: 85,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: currentImages.length,
+                                    itemBuilder: (context, index) {
+                                      final imgUrl = currentImages[index];
+                                      return Stack(
+                                        children: [
+                                          Container(
+                                            margin: const EdgeInsets.only(
+                                              left: 8,
+                                            ),
+                                            width: 85,
+                                            height: 85,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              image: DecorationImage(
+                                                image: NetworkImage(imgUrl),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 3,
+                                            left: 3,
+                                            child: InkWell(
+                                              onTap: () => setDialogState(
+                                                () => currentImages.removeAt(
+                                                  index,
+                                                ),
+                                              ),
+                                              child: Container(
+                                                padding: const EdgeInsets.all(
+                                                  3,
+                                                ),
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.red,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(
+                                                  Icons.close,
+                                                  color: Colors.white,
+                                                  size: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              // New Selected Files
+                              if (newFiles.isNotEmpty) ...[
+                                const Text(
+                                  'صور جديدة مختارة للإضافة:',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  spacing: 8,
+                                  children: newFiles
+                                      .map(
+                                        (f) => Chip(
+                                          label: Text(
+                                            f.name,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                          onDeleted: () => setDialogState(
+                                            () => newFiles.remove(f),
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                              // Pick Images Button
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await FilePicker.pickFiles(
+                                    type: FileType.image,
+                                    allowMultiple: true,
+                                    withData: true,
+                                  );
+                                  if (result != null) {
+                                    setDialogState(
+                                      () => newFiles.addAll(result.files),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.add_photo_alternate_rounded,
+                                  size: 18,
+                                ),
+                                label: const Text('إضافة صور جديدة من الجهاز'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context),
-                        child: const Text('إلغاء')),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary),
-                      onPressed: isSaving ? null : () async {
-                        if (formKey.currentState!.validate()) {
-                          setDialogState(() => isSaving = true);
-                          List<String> newUploadedUrls = [];
-                          if (newFiles.isNotEmpty) {
-                            newUploadedUrls = await _uploadImages(newFiles);
-                          }
-                          final finalImages = [
-                            ...currentImages,
-                            ...newUploadedUrls
-                          ];
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('إلغاء'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          if (formKey.currentState!.validate()) {
+                            setDialogState(() => isSaving = true);
+                            List<String> newUploadedUrls = [];
+                            if (newFiles.isNotEmpty) {
+                              newUploadedUrls = await _uploadImages(newFiles);
+                            }
+                            final finalImages = [
+                              ...currentImages,
+                              ...newUploadedUrls,
+                            ];
 
-                          final data = {
-                            'title': titleController.text.trim(),
-                            'description': descController.text.trim(),
-                            'price': _parseArabicPrice(priceController.text),
-                            'area': _parseArabicArea(areaController.text),
-                            'location': locationController.text.trim(),
-                            'type': type,
-                            'status': status,
-                            'bedrooms': int.tryParse(roomsController.text) ?? 0,
-                            'bathrooms': int.tryParse(
-                                bathroomsController.text) ?? 0,
-                            'floor': int.tryParse(floorController.text) ?? 0,
-                            'build_year': int.tryParse(yearController.text) ??
-                                DateTime
-                                    .now()
-                                    .year,
-                            'roi': double.tryParse(roiController.text) ?? 0.0,
-                            'purpose': purpose,
-                            'payment_method': paymentMethod,
-                            'target_purpose': targetPurpose,
-                            'amenities': selectedAmenities,
-                            'finishing': finishing,
-                            'folder_name': folderName,
-                            'is_featured': isFeatured,
-                            'video_url': videoUrlController.text.trim(),
-                            'images': finalImages,
-                          };
-                          final ok = await _supabaseService.updateProperty(prop
-                              .id, data);
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            if (ok) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text(
-                                    'تم تحديث بيانات وصور العقار بنجاح ✅'),
-                                    backgroundColor: AppColors.success),
-                              );
-                              _loadDashboardData();
+                            final data = {
+                              'title': titleController.text.trim(),
+                              'description': descController.text.trim(),
+                              'price': _parseArabicPrice(priceController.text),
+                              'area': _parseArabicArea(areaController.text),
+                              'location': locationController.text.trim(),
+                              'type': type,
+                              'status': status,
+                              'bedrooms':
+                                  int.tryParse(roomsController.text) ?? 0,
+                              'bathrooms':
+                                  int.tryParse(bathroomsController.text) ?? 0,
+                              'floor': int.tryParse(floorController.text) ?? 0,
+                              'build_year':
+                                  int.tryParse(yearController.text) ??
+                                  DateTime.now().year,
+                              'roi': double.tryParse(roiController.text) ?? 0.0,
+                              'purpose': purpose,
+                              'payment_method': paymentMethod,
+                              'target_purpose': targetPurpose,
+                              'amenities': selectedAmenities,
+                              'finishing': finishing,
+                              'folder_name': folderName,
+                              'is_featured': isFeatured,
+                              'video_url': videoUrlController.text.trim(),
+                              'images': finalImages,
+                            };
+                            final ok = await _supabaseService.updateProperty(
+                              prop.id,
+                              data,
+                            );
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              if (ok) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'تم تحديث بيانات وصور العقار بنجاح ✅',
+                                    ),
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                );
+                                _loadDashboardData();
+                              }
                             }
                           }
-                        }
-                      },
-                      child: isSaving
-                          ? const SizedBox(width: 16,
+                        },
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                          : const Text('حفظ التعديلات', style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'حفظ التعديلات',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
+              ],
+            ),
           ),
         );
-      } );
+      },
+    );
   }
 
   void _showDeletePropertyDialog(Property prop) {
@@ -5497,9 +6874,16 @@ class _DashboardScreenState extends State<DashboardScreen>
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('تأكيد الحذف 🗑️', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text('هل أنت تأكد من حذف عقار "${prop.title}" نهائياً من السيستم؟'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'تأكيد الحذف 🗑️',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            'هل أنت تأكد من حذف عقار "${prop.title}" نهائياً من السيستم؟',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -5512,12 +6896,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                 final ok = await _supabaseService.deleteProperty(prop.id);
                 if (ok) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم حذف العقار بنجاح 🗑️'), backgroundColor: AppColors.success),
+                    const SnackBar(
+                      content: Text('تم حذف العقار بنجاح 🗑️'),
+                      backgroundColor: AppColors.success,
+                    ),
                   );
                   _loadDashboardData();
                 }
               },
-              child: const Text('حذف العقار', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'حذف العقار',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -5526,7 +6916,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Future<void> _sharePropertyWhatsApp(Property prop) async {
-    final text = '''
+    final text =
+        '''
 🏡 *${prop.title}* 🏡
 
 📍 *الموقع:* ${prop.location}
@@ -5548,8 +6939,11 @@ ${prop.description}
     }
   }
 
+
   void _showEditCustomerNotesDialog(Map<String, dynamic> cust) {
-    final notesController = TextEditingController(text: cust['notes']?.toString() ?? '');
+    final notesController = TextEditingController(
+      text: cust['notes']?.toString() ?? '',
+    );
     bool isSaving = false;
 
     showDialog(
@@ -5558,21 +6952,35 @@ ${prop.description}
         textDirection: TextDirection.rtl,
         child: StatefulBuilder(
           builder: (context, setDialogState) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text('ملاحظات وتحديثات العميل 📝', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              'ملاحظات وتحديثات العميل 📝',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             content: SizedBox(
-              width: MediaQuery.of(context).size.width > 600 ? 400 : MediaQuery.of(context).size.width,
+              width: MediaQuery.of(context).size.width > 600
+                  ? 400
+                  : MediaQuery.of(context).size.width,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('العميل: ${cust['name']}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  Text(
+                    'العميل: ${cust['name']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: notesController,
                     maxLines: 4,
                     decoration: const InputDecoration(
-                      hintText: 'اكتب ملاحظات العميل، تفاصيل آخر مكالمة، أو الاتفاق...',
+                      hintText:
+                          'اكتب ملاحظات العميل، تفاصيل آخر مكالمة، أو الاتفاق...',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -5585,24 +6993,36 @@ ${prop.description}
                 child: const Text('إلغاء'),
               ),
               ElevatedButton(
-                onPressed: isSaving ? null : () async {
-                  setDialogState(() => isSaving = true);
-                  final success = await _supabaseService.updateCustomerNotes(
-                    cust['id'].toString(),
-                    notesController.text.trim(),
-                  );
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    if (success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('تم تحديث ملاحظات العميل بنجاح ✅'), backgroundColor: AppColors.success),
-                      );
-                      _loadDashboardData();
-                    }
-                  }
-                },
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        setDialogState(() => isSaving = true);
+                        final success = await _supabaseService
+                            .updateCustomerNotes(
+                              cust['id'].toString(),
+                              notesController.text.trim(),
+                            );
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'تم تحديث ملاحظات العميل بنجاح ✅',
+                                ),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                            _loadDashboardData();
+                          }
+                        }
+                      },
                 child: isSaving
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Text('حفظ الملاحظات'),
               ),
             ],
@@ -5616,10 +7036,12 @@ ${prop.description}
       await launchUrl(Uri(scheme: 'tel', path: p));
 
   Future<void> _openWhatsApp(String phoneNumber, String name) async {
-    String cleanPhone =
-        phoneNumber.startsWith('0') ? '2$phoneNumber' : phoneNumber;
+    String cleanPhone = phoneNumber.startsWith('0')
+        ? '2$phoneNumber'
+        : phoneNumber;
     final Uri whatsappUri = Uri.parse(
-        "https://wa.me/$cleanPhone?text=${Uri.encodeComponent('أهلاً يا $name، بخصوص طلبك في عقارات طنطا والقاهرة...')}");
+      "https://wa.me/$cleanPhone?text=${Uri.encodeComponent('أهلاً يا $name، بخصوص طلبك في عقارات طنطا والقاهرة...')}",
+    );
     if (await canLaunchUrl(whatsappUri)) {
       await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
     }
@@ -5633,8 +7055,10 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) 
-{
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return SizedBox.expand(child: child);
   }
 
