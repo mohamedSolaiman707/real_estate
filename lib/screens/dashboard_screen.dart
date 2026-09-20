@@ -229,23 +229,26 @@ class _DashboardScreenState extends State<DashboardScreen>
                       letterSpacing: -0.2,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Container(
-                    width: 1,
-                    height: 16,
-                    color: Colors.white24,
-                  ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      'نظام الإدارة المتكامل',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                  if (MediaQuery.of(context).size.width > 600) ...[
+                    const SizedBox(width: 10),
+                    Container(
+                      width: 1,
+                      height: 16,
+                      color: Colors.white24,
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'نظام الإدارة المتكامل',
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
+                  ] else
+                    const Spacer(),
                   _buildHeaderIconButton(
                     icon: Icons.home_rounded,
                     tooltip: 'الرئيسية',
@@ -325,7 +328,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 2.4,
+                    childAspectRatio: constraints.maxWidth < 400 ? 1.8 : 2.4,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                     children: [
@@ -334,24 +337,28 @@ class _DashboardScreenState extends State<DashboardScreen>
                         label: 'طلبات جديدة',
                         value: '$hotLeads',
                         accentColor: AppColors.warning,
+                        isCompact: constraints.maxWidth < 400,
                       ),
                       _buildKpiCard(
                         icon: Icons.groups_rounded,
                         label: 'إجمالي العملاء',
                         value: '${_customers.length}',
                         accentColor: AppColors.success,
+                        isCompact: constraints.maxWidth < 400,
                       ),
                       _buildKpiCard(
                         icon: Icons.event_available_rounded,
                         label: 'معاينات',
                         value: '$pendingTours',
                         accentColor: AppColors.info,
+                        isCompact: constraints.maxWidth < 400,
                       ),
                       _buildKpiCard(
                         icon: Icons.verified_rounded,
                         label: 'تحويلات',
                         value: '$convertedLeads',
                         accentColor: AppColors.secondary,
+                        isCompact: constraints.maxWidth < 400,
                       ),
                     ],
                   );
@@ -365,6 +372,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildTabBarSection() {
+    final isMobile = MediaQuery.of(context).size.width < 500;
+
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.slateDark,
@@ -372,7 +381,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           bottom: BorderSide(color: Color(0xFF1E293B), width: 1),
         ),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       alignment: Alignment.center,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 600),
@@ -399,15 +408,18 @@ class _DashboardScreenState extends State<DashboardScreen>
           labelColor: Colors.white,
           unselectedLabelColor: AppColors.textMuted,
           dividerColor: Colors.transparent,
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 13,
+            fontSize: isMobile ? 11 : 13,
+            fontFamily: 'Cairo',
           ),
+          padding: EdgeInsets.zero,
+          labelPadding: EdgeInsets.symmetric(horizontal: isMobile ? 4 : 8),
           tabs: [
-            Tab(text: 'الطلبات (${_leads.length})'),
-            Tab(text: 'العملاء (${_customers.length})'),
-            Tab(text: 'المعاينات (${_tours.length})'),
-            Tab(text: 'العقارات (${_properties.length})'),
+            Tab(text: isMobile ? 'طلبات' : 'الطلبات (${_leads.length})'),
+            Tab(text: isMobile ? 'عملاء' : 'العملاء (${_customers.length})'),
+            Tab(text: isMobile ? 'معاينات' : 'المعاينات (${_tours.length})'),
+            Tab(text: isMobile ? 'عقارات' : 'العقارات (${_properties.length})'),
           ],
         ),
       ),
@@ -444,9 +456,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     required String label,
     required String value,
     required Color accentColor,
+    bool isCompact = false,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -469,16 +482,16 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: isCompact ? 32 : 40,
+            height: isCompact ? 32 : 40,
             decoration: BoxDecoration(
               color: accentColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: accentColor.withOpacity(0.2)),
             ),
-            child: Icon(icon, color: accentColor, size: 20),
+            child: Icon(icon, color: accentColor, size: isCompact ? 16 : 20),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isCompact ? 8 : 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,18 +499,17 @@ class _DashboardScreenState extends State<DashboardScreen>
               children: [
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                    fontSize: isCompact ? 16 : 20,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 Text(
                   label,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.6),
-                    fontSize: 11,
+                    fontSize: isCompact ? 9 : 11,
                     fontWeight: FontWeight.w500,
                   ),
                   maxLines: 1,
@@ -554,9 +566,9 @@ class _DashboardScreenState extends State<DashboardScreen>
           backgroundColor: AppColors.primary,
           elevation: 4,
           icon: const Icon(Icons.add_rounded, color: Colors.white),
-          label: const Text(
-            'إضافة عقار جديد',
-            style: TextStyle(
+          label: Text(
+            MediaQuery.of(context).size.width < 500 ? 'إضافة' : 'إضافة عقار جديد',
+            style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
@@ -719,8 +731,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
     );
 
+    final isMobile = MediaQuery.of(context).size.width < 500;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.fromLTRB(16, 0, 16, 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -733,11 +747,11 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          tilePadding: EdgeInsets.symmetric(horizontal: isMobile ? 10 : 14, vertical: 6),
+          childrenPadding: EdgeInsets.fromLTRB(isMobile ? 10 : 14, 0, isMobile ? 10 : 14, 14),
           leading: Container(
-            width: 44,
-            height: 44,
+            width: isMobile ? 38 : 44,
+            height: isMobile ? 38 : 44,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isConverted
@@ -809,7 +823,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               const SizedBox(height: 4),
               Text(
                 summaryStr,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                style: TextStyle(color: AppColors.textMuted, fontSize: isMobile ? 11 : 12),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1147,15 +1161,16 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Widget _buildInfoRow(IconData icon, String text) {
+    final isMobile = MediaQuery.of(context).size.width < 500;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppColors.primary),
+        Icon(icon, size: isMobile ? 14 : 16, color: AppColors.primary),
         const SizedBox(width: 8),
         Expanded(
             child: Text(text,
                 style:
-                    const TextStyle(fontSize: 13, color: Colors.black87))),
+                    TextStyle(fontSize: isMobile ? 12 : 13, color: Colors.black87))),
       ],
     );
   }

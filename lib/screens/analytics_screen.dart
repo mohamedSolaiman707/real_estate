@@ -163,7 +163,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       color: Colors.white, size: 24),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -171,19 +171,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         'لوحة التحليلات والأداء القيادي 📊',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 19,
+                          fontSize: MediaQuery.of(context).size.width < 500 ? 16 : 19,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.3,
                         ),
                       ),
-                      SizedBox(height: 3),
+                      const SizedBox(height: 3),
                       Text(
                         'متابعة المحفظة العقارية والمبيعات • طنطا والقاهرة',
                         style: TextStyle(
                           color: AppColors.textMuted,
-                          fontSize: 12,
+                          fontSize: MediaQuery.of(context).size.width < 500 ? 10 : 12,
                           fontWeight: FontWeight.w500,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -281,8 +283,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth > 800;
+        final isMobile = constraints.maxWidth < 500;
         final crossCount = isDesktop ? 4 : 2;
-        final aspectRatio = isDesktop ? 1.45 : 1.35;
+        final aspectRatio = isDesktop ? 1.45 : (isMobile ? 1.15 : 1.35);
 
         return GridView.count(
           shrinkWrap: true,
@@ -299,7 +302,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               icon: Icons.payments_rounded,
               accentColor: const Color(0xFF10B981),
               bgAccent: const Color(0xFFECFDF5),
-              trendTag: '+14.2% نمو',
+              trendTag: isMobile ? '+14%' : '+14.2% نمو',
               isPositiveTrend: true,
               onTap: () => Navigator.pushNamed(context, '/dashboard', arguments: {'initialTabIndex': 3}),
             ),
@@ -310,7 +313,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               icon: Icons.handshake_rounded,
               accentColor: const Color(0xFF6366F1),
               bgAccent: const Color(0xFFEEF2FF),
-              trendTag: 'معدل مرتفع 🔥',
+              trendTag: isMobile ? 'مرتفع 🔥' : 'معدل مرتفع 🔥',
               isPositiveTrend: true,
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('سيتم عرض تفاصيل الصفقات المتوقعة قريباً'))
@@ -323,7 +326,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               icon: Icons.calendar_month_rounded,
               accentColor: const Color(0xFF0EA5E9),
               bgAccent: const Color(0xFFE0F2FE),
-              trendTag: 'جاهزة الآن ⏱️',
+              trendTag: isMobile ? 'جاهزة ⏱️' : 'جاهزة الآن ⏱️',
               isPositiveTrend: true,
               onTap: () => Navigator.pushNamed(context, '/dashboard', arguments: {'initialTabIndex': 2}),
             ),
@@ -355,6 +358,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     required bool isPositiveTrend,
     VoidCallback? onTap,
   }) {
+    final isMobile = MediaQuery.of(context).size.width < 500;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -368,7 +373,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -376,16 +381,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: isMobile ? 36 : 42,
+                      height: isMobile ? 36 : 42,
                       decoration: BoxDecoration(
                         color: bgAccent,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, color: accentColor, size: 20),
+                      child: Icon(icon, color: accentColor, size: isMobile ? 18 : 20),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: accentColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(20),
@@ -394,7 +399,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         trendTag,
                         style: TextStyle(
                           color: accentColor,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -404,8 +409,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 const Spacer(),
                 Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 22,
+                  style: TextStyle(
+                    fontSize: isMobile ? 18 : 22,
                     fontWeight: FontWeight.w900,
                     color: AppColors.textPrimary,
                     height: 1.1,
@@ -417,8 +422,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 const SizedBox(height: 6),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: isMobile ? 11 : 13,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
@@ -428,8 +433,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    fontSize: 11,
+                  style: TextStyle(
+                    fontSize: isMobile ? 9 : 11,
                     color: AppColors.textSecondary,
                   ),
                   maxLines: 1,
@@ -506,19 +511,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     required Color color,
     bool isLast = false,
   }) {
+    final isMobile = MediaQuery.of(context).size.width < 500;
     return Column(
       children: [
         Row(
           children: [
             Expanded(
-              flex: 4,
+              flex: isMobile ? 5 : 4,
               child: Text(
                 label,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: isMobile ? 12 : 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
               ),
             ),
             Expanded(
-              flex: 6,
+              flex: isMobile ? 5 : 6,
               child: Stack(
                 alignment: Alignment.centerRight,
                 children: [
@@ -541,7 +547,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
                         value,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isMobile ? 10 : 11),
                       ),
                     ),
                   ),
@@ -670,9 +676,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     required IconData icon,
   }) {
     final percentStr = (ratio * 100).toStringAsFixed(0);
+    final isMobile = MediaQuery.of(context).size.width < 500;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -690,7 +697,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   gradient: LinearGradient(colors: gradientColors),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(icon, color: Colors.white, size: 24),
+                child: Icon(icon, color: Colors.white, size: isMobile ? 20 : 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -699,33 +706,38 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   children: [
                     Text(
                       cityName,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: isMobile ? 14 : 16,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                          fontSize: 11, color: AppColors.textMuted),
+                      style: TextStyle(
+                          fontSize: isMobile ? 9 : 11, color: AppColors.textMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 4),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: gradientColors[0].withOpacity(0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '$percentStr% من المحفظة',
+                  '$percentStr%',
                   style: TextStyle(
                     color: gradientColors[0],
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -739,13 +751,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('العقارات المتاحة',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  Text('العقارات المتاحة',
+                      style: TextStyle(fontSize: isMobile ? 10 : 11, color: AppColors.textMuted)),
                   const SizedBox(height: 2),
                   Text(
-                    '$propCount عقارات',
-                    style: const TextStyle(
-                      fontSize: 17,
+                    isMobile ? '$propCount عقار' : '$propCount عقارات',
+                    style: TextStyle(
+                      fontSize: isMobile ? 15 : 17,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
@@ -755,13 +767,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('قيمة المعروضات',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  Text('قيمة المعروضات',
+                      style: TextStyle(fontSize: isMobile ? 10 : 11, color: AppColors.textMuted)),
                   const SizedBox(height: 2),
                   Text(
                     _formatCurrency(portfolioVal),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isMobile ? 14 : 16,
                       fontWeight: FontWeight.bold,
                       color: gradientColors[0],
                     ),
@@ -791,6 +803,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     const int targetGoal = 10;
     final double progress = (totalProps / targetGoal).clamp(0.0, 1.0);
     final int remaining = (targetGoal - totalProps).clamp(0, targetGoal);
+    final isMobile = MediaQuery.of(context).size.width < 500;
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -811,36 +824,38 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                   color: AppColors.successBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.flag_rounded,
-                    color: AppColors.success, size: 24),
+                child: Icon(Icons.flag_rounded,
+                    color: AppColors.success, size: isMobile ? 20 : 24),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'التقدم نحو الهدف الشهري 🎯',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: isMobile ? 14 : 16,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
                     ),
                     Text(
-                      'مستهدف إضافة 10 عقارات حديثة شهرياً في طنطا والقاهرة',
+                      'مستهدف إضافة 10 عقارات حديثة شهرياً',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: isMobile ? 10 : 12,
                         color: AppColors.textMuted,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
               Text(
                 '${(progress * 100).toInt()}%',
-                style: const TextStyle(
-                  fontSize: 22,
+                style: TextStyle(
+                  fontSize: isMobile ? 18 : 22,
                   fontWeight: FontWeight.bold,
                   color: AppColors.success,
                 ),
@@ -1047,6 +1062,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   }
 
   Widget _buildPerformanceLineChart() {
+    final isMobile = MediaQuery.of(context).size.width < 500;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1058,35 +1074,53 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.show_chart_rounded,
-                      color: AppColors.primary, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'مسار نمو المبيعات والعمولات 📈',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(Icons.show_chart_rounded,
+                        color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'مسار نمو المبيعات والعمولات 📈',
+                        style: TextStyle(
+                          fontSize: isMobile ? 14 : 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              Row(
+              const SizedBox(width: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
                 children: [
-                  CircleAvatar(radius: 4, backgroundColor: AppColors.primary),
-                  SizedBox(width: 5),
-                  Text('المبيعات',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                  SizedBox(width: 10),
-                  CircleAvatar(radius: 4, backgroundColor: AppColors.secondary),
-                  SizedBox(width: 5),
-                  Text('المعاينات',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircleAvatar(radius: 3, backgroundColor: AppColors.primary),
+                      const SizedBox(width: 4),
+                      Text('المبيعات',
+                          style: TextStyle(fontSize: isMobile ? 9 : 11, color: AppColors.textMuted)),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircleAvatar(radius: 3, backgroundColor: AppColors.secondary),
+                      const SizedBox(width: 4),
+                      Text('المعاينات',
+                          style: TextStyle(fontSize: isMobile ? 9 : 11, color: AppColors.textMuted)),
+                    ],
+                  ),
                 ],
               ),
             ],
