@@ -42,6 +42,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _showAdvancedFilters = false;
   bool _isOffline = false;
 
+  // ─── Customer Tab States ──────────────────────────────────────────────
+  String _customerSearchQuery = '';
+  String _customerTypeFilter = 'الكل'; // 'الكل', 'مشتري', 'مالك'
+
   List<String> get _allAvailableFolders {
     final set = <String>{'الكل'};
     set.addAll(_customFolders.where((f) => f != 'الكل'));
@@ -416,7 +420,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           padding: EdgeInsets.zero,
           labelPadding: EdgeInsets.symmetric(horizontal: isMobile ? 4 : 8),
           tabs: [
-            Tab(text: isMobile ? 'طلبات' : 'الطلبات (${_leads.length})'),
+            Tab(text: isMobile ? 'طلبات' : 'الطلبات (${_leads.where((l) => l['converted'] != true).length})'),
             Tab(text: isMobile ? 'عملاء' : 'العملاء (${_customers.length})'),
             Tab(text: isMobile ? 'معاينات' : 'المعاينات (${_tours.length})'),
             Tab(text: isMobile ? 'عقارات' : 'العقارات (${_properties.length})'),
@@ -578,7 +582,9 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ─── Leads Tab ───────────────────────────────────────────────────────────────
   Widget _buildLeadsTab() {
-    if (_leads.isEmpty) {
+    final activeLeads = _leads.where((l) => l['converted'] != true).toList();
+
+    if (activeLeads.isEmpty) {
       return _buildEmptyState(
         icon: Icons.inbox_rounded,
         message: 'لا توجد طلبات جديدة حالياً',
@@ -598,16 +604,16 @@ class _DashboardScreenState extends State<DashboardScreen>
               mainAxisSpacing: 16,
               mainAxisExtent: 350,
             ),
-            itemCount: _leads.length,
+            itemCount: activeLeads.length,
             itemBuilder: (context, index) => SingleChildScrollView(
-              child: _buildLeadCard(_leads[index]),
+              child: _buildLeadCard(activeLeads[index]),
             ),
           );
         }
         return ListView.builder(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-          itemCount: _leads.length,
-          itemBuilder: (context, index) => _buildLeadCard(_leads[index]),
+          itemCount: activeLeads.length,
+          itemBuilder: (context, index) => _buildLeadCard(activeLeads[index]),
         );
       },
     );
@@ -1220,43 +1226,133 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ─── Customers Tab ───────────────────────────────────────────────────────────
   Widget _buildCustomersTab() {
-    if (_customers.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.people_outline_rounded,
-        message: 'لا يوجد عملاء مسجلون حالياً',
-        subtitle: 'قم بتحويل الطلبات لعملاء دائمين من تبويب الطلبات',
-      );
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        if (width > 750) {
-          final crossAxisCount = width > 1200 ? 3 : 2;
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              mainAxisExtent: 260,
-            ),
-            itemCount: _customers.length,
-            itemBuilder: (context, index) => _buildCustomerCard(_customers[index]),
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
-          itemCount: _customers.length,
-          itemBuilder: (context, index) => _buildCustomerCard(_customers[index]),
-        );
-      },
+    final filteredCustomers = _customers.where((c) {
+      final name = (c['name'] ?? '').toString().toLowerCase();
+      final phone = (c['phone'] ?? '').toString();
+      final notes = (c['notes'] ?? '').toString().toLowerCase();
+      
+      final matchesSearch = _customerSearchQuery.isEmpty || 
+          name.contains(_customerSearchQuery.toLowerCase()) || 
+          phone.contains(_customerSearchQuery);
+
+      bool isSeller = name.contains('مالك') || name.contains('بيع') || 
+                      notes.contains('مالك') || notes.contains('عرض عقاره');
+      
+      final matchesType = _customerTypeFilter == 'الكل' || 
+          (_customerTypeFilter == 'مالك' && isSeller) || 
+          (_customerTypeFilter == 'مشتري' && !isSeller);
+
+      return matchesSearch && matchesType;
+    }).toList();
+
+    return Column(
+      children: [
+        // Customer Search and Filter Header
+        Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+            boxShadow: AppColors.cardShadow,
+          ),
+          child: Column(
+            children: [
+              TextField(
+                onChanged: (val) => setState(() => _customerSearchQuery = val),
+                decoration: InputDecoration(
+                  hintText: 'بحث في العملاء بالاسم أو الرقم...',
+                  prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  filled: true,
+                  fillColor: AppColors.surfaceSubtle,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text('تصنيف:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textSecondary)),
+                  const SizedBox(width: 12),
+                  _buildMiniFilterChip('الكل', _customerTypeFilter == 'الكل', () => setState(() => _customerTypeFilter = 'الكل')),
+                  const SizedBox(width: 8),
+                  _buildMiniFilterChip('ملاك 🏠', _customerTypeFilter == 'مالك', () => setState(() => _customerTypeFilter = 'مالك')),
+                  const SizedBox(width: 8),
+                  _buildMiniFilterChip('مشترين 💰', _customerTypeFilter == 'مشتري', () => setState(() => _customerTypeFilter = 'مشتري')),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: filteredCustomers.isEmpty
+              ? _buildEmptyState(
+                  icon: Icons.person_search_rounded,
+                  message: 'لم يتم العثور على عملاء',
+                  subtitle: 'جرب تغيير كلمة البحث أو فلاتر التصفية',
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    if (width > 750) {
+                      final crossAxisCount = width > 1200 ? 3 : 2;
+                      return GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          mainAxisExtent: 260,
+                        ),
+                        itemCount: filteredCustomers.length,
+                        itemBuilder: (context, index) => _buildCustomerCard(filteredCustomers[index]),
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
+                      itemCount: filteredCustomers.length,
+                      itemBuilder: (context, index) => _buildCustomerCard(filteredCustomers[index]),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniFilterChip(String label, bool isSelected, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.surfaceSubtle,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildCustomerCard(Map<String, dynamic> cust) {
     final status = cust['status'] ?? 'Cold';
     final name = (cust['name'] ?? 'عميل') as String;
+    final notes = (cust['notes'] ?? '').toString();
     final initial = name.isNotEmpty ? name[0] : 'ع';
+
+    bool isSeller = name.contains('مالك') || name.contains('بيع') || 
+                    notes.contains('مالك') || notes.contains('عرض عقاره');
 
     final statusData = {
       'Hot': {
@@ -1291,7 +1387,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: themeBorder, width: 1),
+        border: Border.all(color: isSeller ? const Color(0xFFD97706) : themeBorder, width: isSeller ? 1.5 : 1.0),
         boxShadow: [
           BoxShadow(
             color: themeColor.withOpacity(0.04),
@@ -1314,7 +1410,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                   height: 44,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [themeColor.withOpacity(0.8), themeColor],
+                      colors: isSeller 
+                        ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+                        : [themeColor.withOpacity(0.8), themeColor],
                       begin: Alignment.topRight,
                       end: Alignment.bottomLeft,
                     ),
@@ -1322,7 +1420,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                   child: Center(
                     child: Text(
-                      initial,
+                      isSeller ? '💰' : initial,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -1337,15 +1435,31 @@ class _DashboardScreenState extends State<DashboardScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isSeller)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFBEB),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: const Color(0xFFFCD34D)),
+                              ),
+                              child: const Text('مالك', style: TextStyle(fontSize: 9, color: Color(0xFF92400E), fontWeight: FontWeight.bold)),
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Container(
