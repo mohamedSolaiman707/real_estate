@@ -67,6 +67,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
     _loadDashboardData();
   }
 
@@ -591,23 +596,43 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ],
                 ),
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _showAddPropertyDialog,
-          backgroundColor: AppColors.primary,
-          elevation: 4,
-          icon: const Icon(Icons.add_rounded, color: Colors.white),
-          label: Text(
-            MediaQuery.of(context).size.width < 500
-                ? 'إضافة'
-                : 'إضافة عقار جديد',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+        floatingActionButton: _buildContextualFAB(),
       ),
     );
+  }
+
+  Widget? _buildContextualFAB() {
+    final isMobile = MediaQuery.of(context).size.width < 500;
+    
+    // 0: Leads, 1: Customers, 2: Tours, 3: Properties
+    switch (_tabController.index) {
+      case 1: // Customers
+        return FloatingActionButton.extended(
+          heroTag: 'add_cust_fab',
+          onPressed: _showAddCustomerDialog,
+          backgroundColor: AppColors.secondary,
+          icon: const Icon(Icons.person_add_rounded, color: Colors.white),
+          label: Text(isMobile ? 'عميل' : 'إضافة عميل جديد', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        );
+      case 2: // Tours
+        return FloatingActionButton.extended(
+          heroTag: 'add_tour_fab',
+          onPressed: _showAddTourDialog,
+          backgroundColor: AppColors.info,
+          icon: const Icon(Icons.add_task_rounded, color: Colors.white),
+          label: Text(isMobile ? 'معاينة' : 'جدولة معاينة', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        );
+      case 3: // Properties
+        return FloatingActionButton.extended(
+          heroTag: 'add_prop_fab',
+          onPressed: _showAddPropertyDialog,
+          backgroundColor: AppColors.primary,
+          icon: const Icon(Icons.add_business_rounded, color: Colors.white),
+          label: Text(isMobile ? 'عقار' : 'إضافة عقار جديد', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        );
+      default:
+        return null; // No FAB for Leads tab (usually automated)
+    }
   }
 
   // ─── Leads Tab ───────────────────────────────────────────────────────────────
@@ -1489,19 +1514,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                     'مشترين 💰',
                     _customerTypeFilter == 'مشتري',
                     () => setState(() => _customerTypeFilter = 'مشتري'),
-                  ),
-                  const Spacer(),
-                  ElevatedButton.icon(
-                    onPressed: _showAddCustomerDialog,
-                    icon: const Icon(Icons.person_add_rounded, size: 16),
-                    label: const Text('إضافة عميل', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
                   ),
                 ],
               ),
