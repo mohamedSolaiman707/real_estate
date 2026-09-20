@@ -358,18 +358,27 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             children: [
               // High-end Logo & Branding
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, Color(0xFF6366F1)],
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/logo-hamd.png',
+                  width: isDesktop ? 36 : 32,
+                  height: isDesktop ? 36 : 32,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.primary, Color(0xFF6366F1)],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.apartment_rounded,
+                      color: Colors.white,
+                      size: isDesktop ? 20 : 18,
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.apartment_rounded,
-                  color: Colors.white,
-                  size: isDesktop ? 20 : 18,
                 ),
               ),
               const SizedBox(width: 12),

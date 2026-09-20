@@ -100,16 +100,27 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _isLoginMode ? Icons.lock_person_rounded : Icons.person_add_rounded,
-                      size: 48,
-                      color: AppColors.primary,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/images/logo-hamd.png',
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isLoginMode
+                              ? Icons.lock_person_rounded
+                              : Icons.person_add_rounded,
+                          size: 48,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
