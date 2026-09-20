@@ -5050,7 +5050,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                               top: Radius.circular(15),
                             ),
                             child: Image.network(
-                              prop.mainImage,
+                              '${prop.mainImage}?t=${DateTime.now().millisecondsSinceEpoch}',
                               height: 210,
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -5058,6 +5058,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 height: 210,
                                 color: AppColors.surfaceSubtle,
                                 child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image_rounded,
+                                    color: AppColors.textMuted,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
+                            ),
                                   child: Icon(
                                     Icons.business_rounded,
                                     color: AppColors.textMuted,

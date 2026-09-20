@@ -53,13 +53,16 @@ class PropertyCard extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: 16 / 10,
                     child: CachedNetworkImage(
-                      imageUrl: property.mainImage,
+                      imageUrl: '${property.mainImage}?t=${DateTime.now().millisecondsSinceEpoch}',
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(color: AppColors.surfaceSubtle),
+                      placeholder: (context, url) => Container(
+                        color: AppColors.surfaceSubtle,
+                        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      ),
                       errorWidget: (context, url, error) => Container(
                         color: AppColors.surfaceSubtle,
-                        child: const Icon(Icons.home_work_rounded, color: AppColors.textMuted, size: 40),
+                        child: const Icon(Icons.broken_image_rounded, color: AppColors.textMuted, size: 40),
                       ),
                     ),
                   ),
