@@ -3355,10 +3355,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                     style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ]
-          ],
-        ),
-      },
-    ),
+          ],)));
+
+}
+
   );
 }
 
@@ -4330,40 +4330,109 @@ class _DashboardScreenState extends State<DashboardScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        final isDesktop = MediaQuery.of(context).size.width > 900;
+        final isDesktop = MediaQuery
+            .of(context)
+            .size
+            .width > 900;
         return Directionality(
           textDirection: TextDirection.rtl,
           child: StatefulBuilder(
-            builder: (context, setDialogState) => AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(Icons.edit_note_rounded, color: AppColors.primary, size: isDesktop ? 24 : 20),
+            builder: (context, setDialogState) =>
+                AlertDialog(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  title: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                            Icons.edit_note_rounded, color: AppColors.primary,
+                            size: isDesktop ? 24 : 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Text('تعديل بيانات العقار ✏️', style: TextStyle(
+                          fontSize: isDesktop ? 18 : 16,
+                          fontWeight: FontWeight.bold)),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text('تعديل بيانات العقار ✏️', style: TextStyle(fontSize: isDesktop ? 18 : 16, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              content: SizedBox(
-                width: isDesktop ? 800 : MediaQuery.of(context).size.width * 0.95,
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        if (isDesktop)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
+                  content: SizedBox(
+                    width: isDesktop ? 800 : MediaQuery
+                        .of(context)
+                        .size
+                        .width * 0.95,
+                    child: Form(
+                      key: formKey,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            if (isDesktop)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                          color: Colors.grey[100],
+                                          borderRadius: BorderRadius.circular(
+                                              12)),
+                                      child: Row(
+                                        children: [
+                                          const Text('الغرض:'),
+                                          const SizedBox(width: 12),
+                                          ChoiceChip(
+                                            label: const Text('بيع'),
+                                            selected: purpose == 'بيع',
+                                            onSelected: (_) =>
+                                                setDialogState(() =>
+                                                purpose = 'بيع'),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ChoiceChip(
+                                            label: const Text('إيجار'),
+                                            selected: purpose == 'إيجار',
+                                            onSelected: (_) =>
+                                                setDialogState(() =>
+                                                purpose = 'إيجار'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      initialValue: [
+                                        'متاح',
+                                        'محجوز',
+                                        'مباع',
+                                        'مؤجر'
+                                      ].contains(status) ? status : 'متاح',
+                                      decoration: const InputDecoration(
+                                          labelText: 'حالة العقار',
+                                          border: OutlineInputBorder()),
+                                      items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
+                                          .map((s) =>
+                                          DropdownMenuItem(
+                                          value: s, child: Text(s)))
+                                          .toList(),
+                                      onChanged: (val) =>
+                                          setDialogState(() => status = val!),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              ...[
+                                Container(
+                                  width: double.infinity,
                                   padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(12)),
                                   child: Row(
                                     children: [
                                       const Text('الغرض:'),
@@ -4371,379 +4440,519 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       ChoiceChip(
                                         label: const Text('بيع'),
                                         selected: purpose == 'بيع',
-                                        onSelected: (_) => setDialogState(() => purpose = 'بيع'),
+                                        onSelected: (_) =>
+                                            setDialogState(() =>
+                                        purpose = 'بيع'),
                                       ),
                                       const SizedBox(width: 8),
                                       ChoiceChip(
                                         label: const Text('إيجار'),
                                         selected: purpose == 'إيجار',
-                                        onSelected: (_) => setDialogState(() => purpose = 'إيجار'),
+                                        onSelected: (_) =>
+                                            setDialogState(() =>
+                                        purpose = 'إيجار'),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: ['متاح', 'محجوز', 'مباع', 'مؤجر'].contains(status) ? status : 'متاح',
-                                  decoration: const InputDecoration(labelText: 'حالة العقار', border: OutlineInputBorder()),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  initialValue: [
+                                    'متاح',
+                                    'محجوز',
+                                    'مباع',
+                                    'مؤجر'
+                                  ].contains(status) ? status : 'متاح',
+                                  decoration: const InputDecoration(
+                                      labelText: 'حالة العقار',
+                                      border: OutlineInputBorder()),
                                   items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
-                                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                                      .map((s) =>
+                                      DropdownMenuItem(
+                                      value: s, child: Text(s)))
                                       .toList(),
-                                  onChanged: (val) => setDialogState(() => status = val!),
-                                ),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                            child: Row(
-                              children: [
-                                const Text('الغرض:'),
-                                const SizedBox(width: 12),
-                                ChoiceChip(
-                                  label: const Text('بيع'),
-                                  selected: purpose == 'بيع',
-                                  onSelected: (_) => setDialogState(() => purpose = 'بيع'),
-                                ),
-                                const SizedBox(width: 8),
-                                ChoiceChip(
-                                  label: const Text('إيجار'),
-                                  selected: purpose == 'إيجار',
-                                  onSelected: (_) => setDialogState(() => purpose = 'إيجار'),
+                                  onChanged: (val) =>
+                                      setDialogState(() => status = val!),
                                 ),
                               ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            initialValue: ['متاح', 'محجوز', 'مباع', 'مؤجر'].contains(status) ? status : 'متاح',
-                            decoration: const InputDecoration(labelText: 'حالة العقار', border: OutlineInputBorder()),
-                            items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
-                                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                                .toList(),
-                            onChanged: (val) => setDialogState(() => status = val!),
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        if (isDesktop)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  value: AppStrings.finishingTypes.contains(finishing) ? finishing : AppStrings.finishingTypes.first,
-                                  decoration: const InputDecoration(labelText: 'مستوى التشطيب ✨', border: OutlineInputBorder()),
+                            const SizedBox(height: 12),
+                            if (isDesktop)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      value: AppStrings.finishingTypes.contains(
+                                          finishing) ? finishing : AppStrings
+                                          .finishingTypes.first,
+                                      decoration: const InputDecoration(
+                                          labelText: 'مستوى التشطيب ✨',
+                                          border: OutlineInputBorder()),
+                                      items: AppStrings.finishingTypes
+                                          .map((f) =>
+                                          DropdownMenuItem(
+                                          value: f, child: Text(f)))
+                                          .toList(),
+                                      onChanged: (val) =>
+                                          setDialogState(() =>
+                                      finishing = val!),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      value: _customFolders.contains(folderName)
+                                          ? folderName
+                                          : (_customFolders
+                                          .where((f) => f != 'الكل')
+                                          .firstOrNull ?? 'عام'),
+                                      decoration: const InputDecoration(
+                                          labelText: 'الفولدر / المنطقة 📁',
+                                          border: OutlineInputBorder()),
+                                      items: _customFolders.where((f) =>
+                                      f != 'الكل')
+                                          .map((f) =>
+                                          DropdownMenuItem(
+                                          value: f, child: Text(f)))
+                                          .toList(),
+                                      onChanged: (val) =>
+                                          setDialogState(() =>
+                                      folderName = val!),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              ...[
+                                DropdownButtonFormField<String>(
+                                  value: AppStrings.finishingTypes.contains(
+                                      finishing) ? finishing : AppStrings
+                                      .finishingTypes.first,
+                                  decoration: const InputDecoration(
+                                      labelText: 'مستوى التشطيب ✨',
+                                      border: OutlineInputBorder()),
                                   items: AppStrings.finishingTypes
-                                      .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                      .map((f) =>
+                                      DropdownMenuItem(
+                                      value: f, child: Text(f)))
                                       .toList(),
-                                  onChanged: (val) => setDialogState(() => finishing = val!),
+                                  onChanged: (val) =>
+                                      setDialogState(() => finishing = val!),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  value: _customFolders.contains(folderName) ? folderName : (_customFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
-                                  decoration: const InputDecoration(labelText: 'الفولدر / المنطقة 📁', border: OutlineInputBorder()),
-                                  items: _customFolders.where((f) => f != 'الكل')
-                                      .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  value: _customFolders.contains(folderName)
+                                      ? folderName
+                                      : (_customFolders
+                                      .where((f) => f != 'الكل')
+                                      .firstOrNull ?? 'عام'),
+                                  decoration: const InputDecoration(
+                                      labelText: 'الفولدر / المنطقة 📁',
+                                      border: OutlineInputBorder()),
+                                  items: _customFolders.where((f) =>
+                                  f != 'الكل')
+                                      .map((f) =>
+                                      DropdownMenuItem(
+                                      value: f, child: Text(f)))
                                       .toList(),
-                                  onChanged: (val) => setDialogState(() => folderName = val!),
+                                  onChanged: (val) =>
+                                      setDialogState(() => folderName = val!),
                                 ),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          DropdownButtonFormField<String>(
-                            value: AppStrings.finishingTypes.contains(finishing) ? finishing : AppStrings.finishingTypes.first,
-                            decoration: const InputDecoration(labelText: 'مستوى التشطيب ✨', border: OutlineInputBorder()),
-                            items: AppStrings.finishingTypes
-                                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                .toList(),
-                            onChanged: (val) => setDialogState(() => finishing = val!),
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            value: _customFolders.contains(folderName) ? folderName : (_customFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
-                            decoration: const InputDecoration(labelText: 'الفولدر / المنطقة 📁', border: OutlineInputBorder()),
-                            items: _customFolders.where((f) => f != 'الكل')
-                                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                .toList(),
-                            onChanged: (val) => setDialogState(() => folderName = val!),
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: titleController,
-                          decoration: const InputDecoration(labelText: 'عنوان الإعلان (مطلوب)', border: OutlineInputBorder()),
-                          validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        if (isDesktop)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: locationController,
-                                  decoration: const InputDecoration(labelText: 'الموقع والحي 📍', border: OutlineInputBorder()),
-                                  validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب'].contains(type) ? type : 'شقة',
-                                  decoration: const InputDecoration(labelText: 'النوع', border: OutlineInputBorder()),
-                                  items: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب']
-                                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                                      .toList(),
-                                  onChanged: (val) => setDialogState(() => type = val!),
-                                ),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          TextFormField(
-                            controller: locationController,
-                            decoration: const InputDecoration(labelText: 'الموقع والحي 📍', border: OutlineInputBorder()),
-                            validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                          ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            initialValue: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب'].contains(type) ? type : 'شقة',
-                            decoration: const InputDecoration(labelText: 'النوع', border: OutlineInputBorder()),
-                            items: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب']
-                                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                                .toList(),
-                            onChanged: (val) => setDialogState(() => type = val!),
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        if (isDesktop)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  controller: priceController,
-                                  decoration: const InputDecoration(labelText: 'سعر البيع/الإيجار (ج.م)', border: OutlineInputBorder()),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  controller: areaController,
-                                  decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder()),
-                                ),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          TextFormField(
-                            controller: priceController,
-                            decoration: const InputDecoration(labelText: 'سعر البيع/الإيجار (ج.م)', border: OutlineInputBorder()),
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: areaController,
-                            decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder()),
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        if (isDesktop)
-                          Row(
-                            children: [
-                              Expanded(child: TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف', border: OutlineInputBorder()))),
-                              const SizedBox(width: 8),
-                              Expanded(child: TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder()))),
-                              const SizedBox(width: 8),
-                              Expanded(child: TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()))),
-                            ],
-                          )
-                        else ...[
-                          TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف', border: OutlineInputBorder())),
-                          const SizedBox(height: 12),
-                          TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder())),
-                          const SizedBox(height: 12),
-                          TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder())),
-                        ],
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: descController,
-                        maxLines: 3,
-                        decoration: const InputDecoration(labelText: 'وصف إضافي للعقار', border: OutlineInputBorder()),
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: videoUrlController,
-                        decoration: const InputDecoration(
-                          labelText: 'رابط فيديو المعاينة (YouTube / Vimeo / رابط مباشر) 🎥',
-                          hintText: 'https://www.youtube.com/watch?v=...',
-                          prefixIcon: Icon(Icons.video_library_rounded, color: AppColors.primary),
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // ─── Property Images Section ─────────────────────────────
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          border: Border.all(color: Colors.grey[300]!),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(Icons.collections_rounded, color: AppColors.primary, size: 18),
-                                SizedBox(width: 8),
-                                Text('إدارة صور العقار 📸', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                               ],
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: titleController,
+                              decoration: const InputDecoration(
+                                  labelText: 'عنوان الإعلان (مطلوب)',
+                                  border: OutlineInputBorder()),
+                              validator: (v) => v!.isEmpty ? 'مطلوب' : null,
                             ),
                             const SizedBox(height: 12),
-                            // Existing Images Preview
-                            if (currentImages.isNotEmpty) ...[
-                              const Text('الصور الحالية (اضغط ✖ لإزالة الصورة):', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                height: 85,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: currentImages.length,
-                                  itemBuilder: (context, index) {
-                                    final imgUrl = currentImages[index];
-                                    return Stack(
-                                      children: [
-                                        Container(
-                                          margin: const EdgeInsets.only(left: 8),
-                                          width: 85,
-                                          height: 85,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            image: DecorationImage(image: NetworkImage(imgUrl), fit: BoxFit.cover),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 3,
-                                          left: 3,
-                                          child: InkWell(
-                                            onTap: () => setDialogState(() => currentImages.removeAt(index)),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(3),
-                                              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                              child: const Icon(Icons.close, color: Colors.white, size: 14),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
+                            if (isDesktop)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: locationController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'الموقع والحي 📍',
+                                          border: OutlineInputBorder()),
+                                      validator: (v) =>
+                                      v!.isEmpty
+                                          ? 'مطلوب'
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      initialValue: [
+                                        'شقة',
+                                        'فيلا',
+                                        'محل تجاري',
+                                        'أرض',
+                                        'مكتب'
+                                      ].contains(type) ? type : 'شقة',
+                                      decoration: const InputDecoration(
+                                          labelText: 'النوع',
+                                          border: OutlineInputBorder()),
+                                      items: [
+                                        'شقة',
+                                        'فيلا',
+                                        'محل تجاري',
+                                        'أرض',
+                                        'مكتب'
+                                      ]
+                                          .map((t) =>
+                                          DropdownMenuItem(
+                                          value: t, child: Text(t)))
+                                          .toList(),
+                                      onChanged: (val) =>
+                                          setDialogState(() => type = val!),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              ...[
+                                TextFormField(
+                                  controller: locationController,
+                                  decoration: const InputDecoration(
+                                      labelText: 'الموقع والحي 📍',
+                                      border: OutlineInputBorder()),
+                                  validator: (v) => v!.isEmpty ? 'مطلوب' : null,
                                 ),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  initialValue: [
+                                    'شقة',
+                                    'فيلا',
+                                    'محل تجاري',
+                                    'أرض',
+                                    'مكتب'
+                                  ].contains(type) ? type : 'شقة',
+                                  decoration: const InputDecoration(
+                                      labelText: 'النوع',
+                                      border: OutlineInputBorder()),
+                                  items: [
+                                    'شقة',
+                                    'فيلا',
+                                    'محل تجاري',
+                                    'أرض',
+                                    'مكتب'
+                                  ]
+                                      .map((t) =>
+                                      DropdownMenuItem(
+                                      value: t, child: Text(t)))
+                                      .toList(),
+                                  onChanged: (val) =>
+                                      setDialogState(() => type = val!),
+                                ),
+                              ],
+                            const SizedBox(height: 12),
+                            if (isDesktop)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: priceController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'سعر البيع/الإيجار (ج.م)',
+                                          border: OutlineInputBorder()),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: areaController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'المساحة (م²)',
+                                          border: OutlineInputBorder()),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              ...[
+                                TextFormField(
+                                  controller: priceController,
+                                  decoration: const InputDecoration(
+                                      labelText: 'سعر البيع/الإيجار (ج.م)',
+                                      border: OutlineInputBorder()),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: areaController,
+                                  decoration: const InputDecoration(
+                                      labelText: 'المساحة (م²)',
+                                      border: OutlineInputBorder()),
+                                ),
+                              ],
+                            const SizedBox(height: 12),
+                            if (isDesktop)
+                              Row(
+                                children: [
+                                  Expanded(child: TextFormField(
+                                      controller: roomsController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'الغرف',
+                                          border: OutlineInputBorder()))),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: TextFormField(
+                                      controller: bathroomsController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'الحمامات',
+                                          border: OutlineInputBorder()))),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: TextFormField(
+                                      controller: floorController,
+                                      decoration: const InputDecoration(
+                                          labelText: 'الدور',
+                                          border: OutlineInputBorder()))),
+                                ],
+                              )
+                            else
+                              ...[
+                                TextFormField(controller: roomsController,
+                                    decoration: const InputDecoration(
+                                        labelText: 'الغرف',
+                                        border: OutlineInputBorder())),
+                                const SizedBox(height: 12),
+                                TextFormField(controller: bathroomsController,
+                                    decoration: const InputDecoration(
+                                        labelText: 'الحمامات',
+                                        border: OutlineInputBorder())),
+                                const SizedBox(height: 12),
+                                TextFormField(controller: floorController,
+                                    decoration: const InputDecoration(
+                                        labelText: 'الدور',
+                                        border: OutlineInputBorder())),
+                              ],
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: descController,
+                              maxLines: 3,
+                              decoration: const InputDecoration(
+                                  labelText: 'وصف إضافي للعقار',
+                                  border: OutlineInputBorder()),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: videoUrlController,
+                              decoration: const InputDecoration(
+                                labelText: 'رابط فيديو المعاينة (YouTube / Vimeo / رابط مباشر) 🎥',
+                                hintText: 'https://www.youtube.com/watch?v=...',
+                                prefixIcon: Icon(Icons.video_library_rounded,
+                                    color: AppColors.primary),
+                                border: OutlineInputBorder(),
                               ),
-                              const SizedBox(height: 12),
-                            ],
-                            // New Selected Files
-                            if (newFiles.isNotEmpty) ...[
-                              const Text('صور جديدة مختارة للإضافة:', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                              const SizedBox(height: 6),
-                              Wrap(
-                                spacing: 8,
-                                children: newFiles
-                                    .map((f) => Chip(
-                                          label: Text(f.name, style: const TextStyle(fontSize: 11)),
-                                          onDeleted: () => setDialogState(() => newFiles.remove(f)),
-                                        ))
-                                    .toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            // ─── Property Images Section ─────────────────────────────
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                border: Border.all(color: Colors.grey[300]!),
+                                borderRadius: BorderRadius.circular(14),
                               ),
-                              const SizedBox(height: 10),
-                            ],
-                            // Pick Images Button
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                final result = await FilePicker.pickFiles(
-                                  type: FileType.image,
-                                  allowMultiple: true,
-                                  withData: true,
-                                );
-                                if (result != null) {
-                                  setDialogState(() => newFiles.addAll(result.files));
-                                }
-                              },
-                              icon: const Icon(Icons.add_photo_alternate_rounded, size: 18),
-                              label: const Text('إضافة صور جديدة من الجهاز'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.secondary,
-                                foregroundColor: Colors.white,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(Icons.collections_rounded,
+                                          color: AppColors.primary, size: 18),
+                                      SizedBox(width: 8),
+                                      Text('إدارة صور العقار 📸',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Existing Images Preview
+                                  if (currentImages.isNotEmpty) ...[
+                                    const Text(
+                                        'الصور الحالية (اضغط ✖ لإزالة الصورة):',
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      height: 85,
+                                      child: ListView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        itemCount: currentImages.length,
+                                        itemBuilder: (context, index) {
+                                          final imgUrl = currentImages[index];
+                                          return Stack(
+                                            children: [
+                                              Container(
+                                                margin: const EdgeInsets.only(
+                                                    left: 8),
+                                                width: 85,
+                                                height: 85,
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius
+                                                      .circular(10),
+                                                  image: DecorationImage(
+                                                      image: NetworkImage(
+                                                          imgUrl),
+                                                      fit: BoxFit.cover),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                top: 3,
+                                                left: 3,
+                                                child: InkWell(
+                                                  onTap: () =>
+                                                      setDialogState(() =>
+                                                          currentImages
+                                                              .removeAt(index)),
+                                                  child: Container(
+                                                    padding: const EdgeInsets
+                                                        .all(3),
+                                                    decoration: const BoxDecoration(
+                                                        color: Colors.red,
+                                                        shape: BoxShape.circle),
+                                                    child: const Icon(
+                                                        Icons.close,
+                                                        color: Colors.white,
+                                                        size: 14),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  // New Selected Files
+                                  if (newFiles.isNotEmpty) ...[
+                                    const Text('صور جديدة مختارة للإضافة:',
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                    const SizedBox(height: 6),
+                                    Wrap(
+                                      spacing: 8,
+                                      children: newFiles
+                                          .map((f) =>
+                                          Chip(
+                                            label: Text(f.name,
+                                                style: const TextStyle(
+                                                    fontSize: 11)),
+                                            onDeleted: () =>
+                                                setDialogState(() =>
+                                                    newFiles.remove(f)),
+                                          ))
+                                          .toList(),
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ],
+                                  // Pick Images Button
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final result = await FilePicker.pickFiles(
+                                        type: FileType.image,
+                                        allowMultiple: true,
+                                        withData: true,
+                                      );
+                                      if (result != null) {
+                                        setDialogState(() =>
+                                            newFiles.addAll(result.files));
+                                      }
+                                    },
+                                    icon: const Icon(
+                                        Icons.add_photo_alternate_rounded,
+                                        size: 18),
+                                    label: const Text(
+                                        'إضافة صور جديدة من الجهاز'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.secondary,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                onPressed: isSaving ? null : () async {
-                  if (formKey.currentState!.validate()) {
-                    setDialogState(() => isSaving = true);
-                    List<String> newUploadedUrls = [];
-                    if (newFiles.isNotEmpty) {
-                      newUploadedUrls = await _uploadImages(newFiles);
-                    }
-                    final finalImages = [...currentImages, ...newUploadedUrls];
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context),
+                        child: const Text('إلغاء')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary),
+                      onPressed: isSaving ? null : () async {
+                        if (formKey.currentState!.validate()) {
+                          setDialogState(() => isSaving = true);
+                          List<String> newUploadedUrls = [];
+                          if (newFiles.isNotEmpty) {
+                            newUploadedUrls = await _uploadImages(newFiles);
+                          }
+                          final finalImages = [
+                            ...currentImages,
+                            ...newUploadedUrls
+                          ];
 
-                    final data = {
-                      'title': titleController.text.trim(),
-                      'description': descController.text.trim(),
-                      'price': _parseArabicPrice(priceController.text),
-                      'area': _parseArabicArea(areaController.text),
-                      'location': locationController.text.trim(),
-                      'type': type,
-                      'status': status,
-                      'bedrooms': int.tryParse(roomsController.text) ?? 0,
-                      'bathrooms': int.tryParse(bathroomsController.text) ?? 0,
-                      'floor': int.tryParse(floorController.text) ?? 0,
-                      'build_year': int.tryParse(yearController.text) ?? DateTime.now().year,
-                      'roi': double.tryParse(roiController.text) ?? 0.0,
-                      'purpose': purpose,
-                      'amenities': selectedAmenities,
-                      'finishing': finishing,
-                      'folder_name': folderName,
-                      'is_featured': isFeatured,
-                      'video_url': videoUrlController.text.trim(),
-                      'images': finalImages,
-                    };
-                    final ok = await _supabaseService.updateProperty(prop.id, data);
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      if (ok) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('تم تحديث بيانات وصور العقار بنجاح ✅'), backgroundColor: AppColors.success),
-                        );
-                        _loadDashboardData();
-                      }
-                    }
-                  }
-                },
-                child: isSaving
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('حفظ التعديلات', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ],
+                          final data = {
+                            'title': titleController.text.trim(),
+                            'description': descController.text.trim(),
+                            'price': _parseArabicPrice(priceController.text),
+                            'area': _parseArabicArea(areaController.text),
+                            'location': locationController.text.trim(),
+                            'type': type,
+                            'status': status,
+                            'bedrooms': int.tryParse(roomsController.text) ?? 0,
+                            'bathrooms': int.tryParse(
+                                bathroomsController.text) ?? 0,
+                            'floor': int.tryParse(floorController.text) ?? 0,
+                            'build_year': int.tryParse(yearController.text) ??
+                                DateTime
+                                    .now()
+                                    .year,
+                            'roi': double.tryParse(roiController.text) ?? 0.0,
+                            'purpose': purpose,
+                            'amenities': selectedAmenities,
+                            'finishing': finishing,
+                            'folder_name': folderName,
+                            'is_featured': isFeatured,
+                            'video_url': videoUrlController.text.trim(),
+                            'images': finalImages,
+                          };
+                          final ok = await _supabaseService.updateProperty(prop
+                              .id, data);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            if (ok) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text(
+                                    'تم تحديث بيانات وصور العقار بنجاح ✅'),
+                                    backgroundColor: AppColors.success),
+                              );
+                              _loadDashboardData();
+                            }
+                          }
+                        }
+                      },
+                      child: isSaving
+                          ? const SizedBox(width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                          : const Text('حفظ التعديلات', style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
           ),
-        ),
-      ),
-    );
+        );
+      } );
   }
 
   void _showDeletePropertyDialog(Property prop) {
@@ -4888,7 +5097,8 @@ class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
+      BuildContext context, double shrinkOffset, bool overlapsContent) 
+{
     return SizedBox.expand(child: child);
   }
 
