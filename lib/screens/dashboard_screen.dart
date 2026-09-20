@@ -5119,6 +5119,34 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         labelText: 'الدور',
                                         border: OutlineInputBorder())),
                               ],
+                              const SizedBox(height: 16),
+                              if (isDesktop)
+                                Row(
+                                  children: [
+                                    if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                                      Expanded(
+                                          child: TextFormField(
+                                              controller: roiController,
+                                              decoration: const InputDecoration(labelText: 'العائد ROI %', border: OutlineInputBorder()))),
+                                    if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                                      const SizedBox(width: 12),
+                                    Expanded(
+                                        child: TextFormField(
+                                            controller: yearController,
+                                            decoration: const InputDecoration(labelText: 'سنة البناء', border: OutlineInputBorder()))),
+                                  ],
+                                )
+                              else ...[
+                                if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                                  TextFormField(
+                                      controller: roiController,
+                                      decoration: const InputDecoration(labelText: 'العائد ROI %', border: OutlineInputBorder())),
+                                if (targetPurpose == 'استثمار' || type == 'محل تجاري' || type == 'عمارة كاملة')
+                                  const SizedBox(height: 12),
+                                TextFormField(
+                                    controller: yearController,
+                                    decoration: const InputDecoration(labelText: 'سنة البناء', border: OutlineInputBorder())),
+                              ],
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: descController,
@@ -5310,6 +5338,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     .year,
                             'roi': double.tryParse(roiController.text) ?? 0.0,
                             'purpose': purpose,
+                            'payment_method': paymentMethod,
+                            'target_purpose': targetPurpose,
                             'amenities': selectedAmenities,
                             'finishing': finishing,
                             'folder_name': folderName,
