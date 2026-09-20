@@ -17,6 +17,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   bool _hasError = false;
   Map<String, dynamic> _stats = {};
   String _selectedPeriod = 'هذا الشهر'; // 'هذا الشهر', 'الربع الحالي', 'السنة', 'الكل'
+  
+  // نسبة العمولة الافتراضية
+  double _commissionRate = 1.5; 
 
   late TabController _periodTabController;
 
@@ -197,6 +200,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     border: Border.all(color: Colors.white.withOpacity(0.12)),
                   ),
                   child: IconButton(
+                    icon: const Icon(Icons.settings_suggest_rounded,
+                        color: Colors.white, size: 20),
+                    tooltip: 'إعدادات العمولة',
+                    onPressed: _showCommissionSettings,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.12)),
+                  ),
+                  child: IconButton(
                     icon: const Icon(Icons.refresh_rounded,
                         color: Colors.white, size: 20),
                     tooltip: 'تحديث البيانات',
@@ -274,7 +291,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   // ─── KPI Ribbon Grid ────────────────────────────────────────────────────────
   Widget _buildKpiRibbonGrid() {
     final double portfolioValue = (_stats['total_portfolio_value'] ?? 0).toDouble();
-    final int commission = _stats['commission'] ?? 0;
+    // حسبة ديناميكية للعمولة بناءً على النسبة المحددة
+    final double dynamicCommission = portfolioValue * (_commissionRate / 100);
+    
     final int expectedDeals = _stats['expected_deals'] ?? 0;
     final int toursToday = _stats['tours_today'] ?? 0;
     final int newCustomers = _stats['new_customers'] ?? 0;
@@ -296,8 +315,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           childAspectRatio: aspectRatio,
           children: [
             _buildExecutiveKpiCard(
-              title: 'عمولة المحفظة التقديرية',
-              value: _formatCurrency(commission),
+              title: 'عمولة المحفظة التقديرية ($_commissionRate%)',
+              value: _formatCurrency(dynamicCommission),
               subtitle: 'من إجمالي محفظة ${_formatCurrency(portfolioValue)}',
               icon: Icons.payments_rounded,
               accentColor: const Color(0xFF10B981),
@@ -1305,6 +1324,66 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
             ),
           )).toList(),
         ],
+      ),
+    );
+  }
+
+  void _showCommissionSettings() {
+    showDialog(
+      context: context,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.settings_suggest_rounded, color: AppColors.primary),
+              SizedBox(width: 10),
+              Text('إعدادات حساب العمولة'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'قم بتحديد متوسط نسبة العمولة التي تتقاضاها الشركة من إجمالي قيمة العقار لحساب الأرباح المتوقعة.',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              StatefulBuilder(
+                builder: (context, setDialogState) => Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('نسبة العمولة:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text('${_commissionRate.toStringAsFixed(1)}%', 
+                          style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w900, fontSize: 18)),
+                      ],
+                    ),
+                    Slider(
+                      value: _commissionRate,
+                      min: 0.5,
+                      max: 10.0,
+                      divisions: 19,
+                      label: '${_commissionRate.toStringAsFixed(1)}%',
+                      onChanged: (val) {
+                        setDialogState(() => _commissionRate = val);
+                        setState(() {}); // لتحديث الواجهة الرئيسية خلف الحوار
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إغلاق وتطبيق'),
+            ),
+          ],
+        ),
       ),
     );
   }
