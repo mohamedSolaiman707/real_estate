@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/listings_screen.dart';
@@ -63,6 +64,7 @@ class _MyAppState extends State<MyApp> {
       },
       theme: ThemeData(
         useMaterial3: true,
+        textTheme: GoogleFonts.cairoTextTheme(),
         scaffoldBackgroundColor: AppColors.background,
         primaryColor: AppColors.primary,
         colorScheme: ColorScheme.fromSeed(
@@ -106,15 +108,7 @@ class _MyAppState extends State<MyApp> {
           labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
           hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
         ),
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-          headlineMedium: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-          headlineSmall: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-          titleLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-          bodyLarge: TextStyle(fontSize: 15, color: AppColors.textPrimary),
-          bodyMedium: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-          bodySmall: TextStyle(fontSize: 12, color: AppColors.textMuted),
-        ),
+
       ),
       // ─── Smart Session Gate ───────────────────────────────────────────────────
       // فحص الجلسة عند الفتح: لو في session محفوظة يروح للداشبورد مباشرة

@@ -339,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 24 : 12, vertical: 12),
           decoration: BoxDecoration(
             color: const Color(0xFF0F172A).withOpacity(0.4),
             borderRadius: BorderRadius.circular(24),
@@ -366,10 +366,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.apartment_rounded,
                   color: Colors.white,
-                  size: 20,
+                  size: isDesktop ? 20 : 18,
                 ),
               ),
               const SizedBox(width: 12),
@@ -379,24 +379,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     AppStrings.appName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
-                      fontSize: 15,
+                      fontSize: isDesktop ? 15 : 13,
                       fontFamily: 'Cairo',
                       letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'طنطا والقاهرة • العقارات الفاخرة',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.75),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Cairo',
+                  if (isDesktop) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'طنطا والقاهرة • العقارات الفاخرة',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.75),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Cairo',
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
               const Spacer(),
@@ -407,7 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 16 : 10,
+                    horizontal: isDesktop ? 16 : 8,
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
@@ -418,14 +420,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.grid_view_rounded,
-                          color: Colors.white, size: 16),
+                      Icon(Icons.grid_view_rounded,
+                          color: Colors.white, size: isDesktop ? 16 : 14),
                       const SizedBox(width: 6),
                       Text(
                         isDesktop ? 'تصفح كل العقارات' : 'العقارات',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: isDesktop ? 12 : 11,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'Cairo',
                         ),
@@ -434,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
 
               // Staff Portal Login Button
               InkWell(
@@ -442,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 18 : 12,
+                    horizontal: isDesktop ? 18 : 10,
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
@@ -461,18 +463,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.admin_panel_settings_rounded,
                         color: Colors.white,
-                        size: 16,
+                        size: isDesktop ? 16 : 14,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         isDesktop ? 'دخول الموظفين' : 'دخول',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                          fontSize: isDesktop ? 12 : 11,
                           fontFamily: 'Cairo',
                         ),
                       ),
@@ -571,14 +573,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: AppColors.secondary.withOpacity(0.9),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(color: Colors.white.withOpacity(0.2))),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.verified_rounded, color: Colors.white, size: 16),
-                  SizedBox(width: 6),
+                  const Icon(Icons.verified_rounded, color: Colors.white, size: 16),
+                  const SizedBox(width: 6),
                   Text('خدمات عقارية متميزة في طنطا والقاهرة 🏢',
                       style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Cairo')),
+                          color: Colors.white, fontWeight: FontWeight.bold, fontSize: isDesktop ? 13 : 11, fontFamily: 'Cairo')),
                 ],
               ),
             ),
@@ -588,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
               text: TextSpan(
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: isDesktop ? 48 : 30,
+                  fontSize: isDesktop ? 48 : 28,
                   height: 1.35,
                   fontFamily: 'Cairo',
                 ),
@@ -609,7 +611,7 @@ class _HomeScreenState extends State<HomeScreen> {
               AppStrings.homeSubtitle,
               style: TextStyle(
                 color: Colors.white.withOpacity(0.85),
-                fontSize: isDesktop ? 20 : 15,
+                fontSize: isDesktop ? 20 : 14,
                 fontWeight: FontWeight.w500,
                 fontFamily: 'Cairo',
               ),
@@ -646,7 +648,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 24),
-                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: isDesktop ? 24 : 12),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(24),
@@ -656,11 +658,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildTrustItem(Icons.history_toggle_off_rounded, '10+ سنوات خبرة', 'تميز وثقة عقارية'),
+                      _buildTrustItem(Icons.history_toggle_off_rounded, isDesktop ? '10+ سنوات خبرة' : '10+ سنوات', isDesktop ? 'تميز وثقة عقارية' : 'خبرة عقارية', isDesktop),
                       Container(width: 1, height: 35, color: Colors.white24),
-                      _buildTrustItem(Icons.handshake_rounded, '500+ معاملة ناجحة', 'في طنطا والقاهرة'),
+                      _buildTrustItem(Icons.handshake_rounded, isDesktop ? '500+ معاملة ناجحة' : '500+ معاملة', isDesktop ? 'في طنطا والقاهرة' : 'ناجحة', isDesktop),
                       Container(width: 1, height: 35, color: Colors.white24),
-                      _buildTrustItem(Icons.support_agent_rounded, 'دعم 24/7', 'مستشار متوفر دائماً'),
+                      _buildTrustItem(Icons.support_agent_rounded, isDesktop ? 'دعم 24/7' : 'دعم فني', isDesktop ? 'مستشار متوفر دائماً' : 'متوفر دائماً', isDesktop),
                     ],
                   ),
                 ),
@@ -672,15 +674,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTrustItem(IconData icon, String title, String subtitle) {
+  Widget _buildTrustItem(IconData icon, String title, String subtitle, bool isDesktop) {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, color: const Color(0xFFF59E0B), size: 24),
+          Icon(icon, color: const Color(0xFFF59E0B), size: isDesktop ? 24 : 20),
           const SizedBox(height: 6),
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Cairo')),
+          Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isDesktop ? 14 : 11, fontFamily: 'Cairo')),
           const SizedBox(height: 2),
-          Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 11, fontFamily: 'Cairo'), textAlign: TextAlign.center),
+          Text(subtitle, style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: isDesktop ? 11 : 9, fontFamily: 'Cairo'), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -689,9 +691,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildLeadForm(bool isDesktop) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 1000),
-      padding: EdgeInsets.all(isDesktop ? 36 : 20),
+      padding: EdgeInsets.all(isDesktop ? 36 : 16),
       margin: EdgeInsets.symmetric(
-          vertical: isDesktop ? 48 : 32, horizontal: isDesktop ? 24 : 16),
+          vertical: isDesktop ? 48 : 24, horizontal: isDesktop ? 24 : 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -722,23 +724,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.real_estate_agent_rounded,
-                      color: AppColors.primary, size: 26),
+                  child: Icon(Icons.real_estate_agent_rounded,
+                      color: AppColors.primary, size: isDesktop ? 26 : 22),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('سجل اهتمامك وهنكلمك فوراً 📞',
                           style: TextStyle(
-                              fontSize: 22,
+                              fontSize: isDesktop ? 22 : 18,
                               fontWeight: FontWeight.w900,
                               color: AppColors.textPrimary,
                               fontFamily: 'Cairo')),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text('ابحث عن عقارك المثالي بدعم كامل من مستشارينا',
-                          style: TextStyle(fontSize: 13, color: Color(0xFF64748B), fontFamily: 'Cairo')),
+                          style: TextStyle(fontSize: isDesktop ? 13 : 11, color: const Color(0xFF64748B), fontFamily: 'Cairo')),
                     ],
                   ),
                 ),
@@ -910,23 +912,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: const Color(0xFFF8FAFC),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFFE2E8F0))),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  child: Row(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    alignment: WrapAlignment.spaceBetween,
                     children: [
                       const Text('الغرض: ', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontFamily: 'Cairo')),
-                      const Spacer(),
-                      ...AppStrings.purposes.map((p) => Row(
-                        children: [
-                          Radio<String>(
-                            value: p,
-                            groupValue: _purpose,
-                            activeColor: AppColors.primary,
-                            onChanged: (val) => setState(() => _purpose = val!),
-                          ),
-                          Text(p, style: const TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Cairo')),
-                          const SizedBox(width: 6),
-                        ],
-                      )).toList(),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: AppStrings.purposes.map((p) => Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Radio<String>(
+                              value: p,
+                              groupValue: _purpose,
+                              activeColor: AppColors.primary,
+                              onChanged: (val) => setState(() => _purpose = val!),
+                            ),
+                            Text(p, style: const TextStyle(fontWeight: FontWeight.w600, fontFamily: 'Cairo')),
+                            const SizedBox(width: 4),
+                          ],
+                        )).toList(),
+                      ),
                     ],
                   ),
                 ),
@@ -1043,9 +1050,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 20,
-                            mainAxisSpacing: 20,
-                            childAspectRatio: 0.75,
+                            crossAxisSpacing: isDesktop ? 20 : 16,
+                            mainAxisSpacing: isDesktop ? 20 : 16,
+                            childAspectRatio: isDesktop ? 0.75 : 0.8,
                           ),
                           itemCount: _featuredProperties.length,
                           itemBuilder: (context, index) {

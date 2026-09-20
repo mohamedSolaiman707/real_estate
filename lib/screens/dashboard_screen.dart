@@ -2774,241 +2774,378 @@ class _DashboardScreenState extends State<DashboardScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+      builder: (context) {
+        final isDesktop = MediaQuery.of(context).size.width > 900;
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: StatefulBuilder(
+            builder: (context, setDialogState) => AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.add_home_rounded,
+                      color: AppColors.secondary, size: isDesktop ? 24 : 20),
                 ),
-                child: const Icon(Icons.add_home_rounded,
-                    color: AppColors.secondary),
-              ),
-              const SizedBox(width: 12),
-              const Text('إضافة عقار جديد 🏢',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: SizedBox(
-            width: 800,
-            child: Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12)),
-                            child: Row(
-                              children: [
-                                const Text('الغرض:'),
-                                const SizedBox(width: 12),
-                                ChoiceChip(
-                                  label: const Text('بيع'),
-                                  selected: purpose == 'بيع',
-                                  onSelected: (val) =>
-                                      setDialogState(() => purpose = 'بيع'),
+                const SizedBox(width: 12),
+                Text('إضافة عقار جديد 🏢',
+                    style: TextStyle(fontSize: isDesktop ? 18 : 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: SizedBox(
+              width: isDesktop ? 800 : MediaQuery.of(context).size.width * 0.95,
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      if (isDesktop)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: Row(
+                                  children: [
+                                    const Text('الغرض:'),
+                                    const SizedBox(width: 12),
+                                    ChoiceChip(
+                                      label: const Text('بيع'),
+                                      selected: purpose == 'بيع',
+                                      onSelected: (val) =>
+                                          setDialogState(() => purpose = 'بيع'),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    ChoiceChip(
+                                      label: const Text('إيجار'),
+                                      selected: purpose == 'إيجار',
+                                      onSelected: (val) =>
+                                          setDialogState(() => purpose = 'إيجار'),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                ChoiceChip(
-                                  label: const Text('إيجار'),
-                                  selected: purpose == 'إيجار',
-                                  onSelected: (val) =>
-                                      setDialogState(() => purpose = 'إيجار'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: status,
+                                items: AppStrings.propertyStatuses
+                                    .map((s) =>
+                                        DropdownMenuItem(value: s, child: Text(s)))
+                                    .toList(),
+                                onChanged: (v) =>
+                                    setDialogState(() => status = v!),
+                                decoration: InputDecoration(
+                                    labelText: 'حالة العقار',
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10))),
+                              ),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Row(
+                            children: [
+                              const Text('الغرض:'),
+                              const SizedBox(width: 12),
+                              ChoiceChip(
+                                label: const Text('بيع'),
+                                selected: purpose == 'بيع',
+                                onSelected: (val) =>
+                                    setDialogState(() => purpose = 'بيع'),
+                              ),
+                              const SizedBox(width: 8),
+                              ChoiceChip(
+                                label: const Text('إيجار'),
+                                selected: purpose == 'إيجار',
+                                onSelected: (val) =>
+                                    setDialogState(() => purpose = 'إيجار'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: status,
+                          items: AppStrings.propertyStatuses
+                              .map((s) =>
+                                  DropdownMenuItem(value: s, child: Text(s)))
+                              .toList(),
+                          onChanged: (v) =>
+                              setDialogState(() => status = v!),
+                          decoration: InputDecoration(
+                              labelText: 'حالة العقار',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10))),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      if (isDesktop)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: finishing,
+                                decoration: InputDecoration(
+                                  labelText: 'مستوى التشطيب ✨',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
-                              ],
+                                items: AppStrings.finishingTypes
+                                    .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                    .toList(),
+                                onChanged: (val) => setDialogState(() => finishing = val!),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: status,
-                            items: AppStrings.propertyStatuses
-                                .map((s) =>
-                                    DropdownMenuItem(value: s, child: Text(s)))
-                                .toList(),
-                            onChanged: (v) =>
-                                setDialogState(() => status = v!),
-                            decoration: InputDecoration(
-                                labelText: 'حالة العقار',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: finishing,
-                            decoration: InputDecoration(
-                              labelText: 'مستوى التشطيب ✨',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            items: AppStrings.finishingTypes
-                                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                .toList(),
-                            onChanged: (val) => setDialogState(() => finishing = val!),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: _allAvailableFolders.contains(folderName) ? folderName : (_allAvailableFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
-                            decoration: InputDecoration(
-                              labelText: 'الفولدر / المنطقة 📁',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            items: _allAvailableFolders.where((f) => f != 'الكل')
-                                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                .toList(),
-                            onChanged: (val) => setDialogState(() => folderName = val!),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: titleController,
-                      decoration: InputDecoration(
-                          labelText: 'عنوان الإعلان (مطلوب)',
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10))),
-                      validator: (v) => v!.isEmpty ? 'يرجى إدخال العنوان' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: TextFormField(
-                            controller: locationController,
-                            decoration: InputDecoration(
-                                labelText: 'الموقع والحي 📍',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            validator: (v) =>
-                                v!.isEmpty ? 'يرجى إدخال الموقع' : null,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            value: type,
-                            items: AppStrings.propertyTypes
-                                .map((t) =>
-                                    DropdownMenuItem(value: t, child: Text(t)))
-                                .toList(),
-                            onChanged: (v) =>
-                                setDialogState(() => type = v!),
-                            decoration: InputDecoration(
-                                labelText: 'النوع',
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: TextFormField(
-                                controller: priceController,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: _allAvailableFolders.contains(folderName) ? folderName : (_allAvailableFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
                                 decoration: InputDecoration(
-                                    labelText: purpose == 'بيع'
-                                        ? 'سعر البيع (ج.م)'
-                                        : 'الإيجار الشهري (ج.م)',
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10))),
-                                keyboardType: TextInputType.number)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                            child: TextFormField(
-                                controller: areaController,
-                                decoration: InputDecoration(
-                                    labelText: 'المساحة (م²)',
-                                    border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10))),
-                                keyboardType: TextInputType.number)),
+                                  labelText: 'الفولدر / المنطقة 📁',
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                                items: _allAvailableFolders.where((f) => f != 'الكل')
+                                    .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                    .toList(),
+                                onChanged: (val) => setDialogState(() => folderName = val!),
+                              ),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        DropdownButtonFormField<String>(
+                          value: finishing,
+                          decoration: InputDecoration(
+                            labelText: 'مستوى التشطيب ✨',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          items: AppStrings.finishingTypes
+                              .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                              .toList(),
+                          onChanged: (val) => setDialogState(() => finishing = val!),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: _allAvailableFolders.contains(folderName) ? folderName : (_allAvailableFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
+                          decoration: InputDecoration(
+                            labelText: 'الفولدر / المنطقة 📁',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          items: _allAvailableFolders.where((f) => f != 'الكل')
+                              .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                              .toList(),
+                          onChanged: (val) => setDialogState(() => folderName = val!),
+                        ),
                       ],
-                    ),
-                    const SizedBox(height: 16),
-                    if (type != 'أرض')
-                      Row(
-                        children: [
-                          Expanded(
-                              child: TextFormField(
-                                  controller: roomsController,
-                                  decoration: InputDecoration(
-                                      labelText: 'الغرف',
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10))),
-                                  keyboardType: TextInputType.number)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                              child: TextFormField(
-                                  controller: bathroomsController,
-                                  decoration: InputDecoration(
-                                      labelText: 'الحمامات',
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10))),
-                                  keyboardType: TextInputType.number)),
-                          const SizedBox(width: 12),
-                          Expanded(
-                              child: TextFormField(
-                                  controller: floorController,
-                                  decoration: InputDecoration(
-                                      labelText: 'الدور',
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10))),
-                                  keyboardType: TextInputType.number)),
-                        ],
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: titleController,
+                        decoration: InputDecoration(
+                            labelText: 'عنوان الإعلان (مطلوب)',
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10))),
+                        validator: (v) => v!.isEmpty ? 'يرجى إدخال العنوان' : null,
                       ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: TextFormField(
-                                controller: roiController,
+                      const SizedBox(height: 16),
+                      if (isDesktop)
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextFormField(
+                                controller: locationController,
                                 decoration: InputDecoration(
-                                    labelText: 'العائد ROI %',
+                                    labelText: 'الموقع والحي 📍',
                                     border: OutlineInputBorder(
                                         borderRadius:
                                             BorderRadius.circular(10))),
-                                keyboardType: TextInputType.number)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                            child: TextFormField(
-                                controller: yearController,
+                                validator: (v) =>
+                                    v!.isEmpty ? 'يرجى إدخال الموقع' : null,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                value: type,
+                                items: AppStrings.propertyTypes
+                                    .map((t) =>
+                                        DropdownMenuItem(value: t, child: Text(t)))
+                                    .toList(),
+                                onChanged: (v) =>
+                                    setDialogState(() => type = v!),
                                 decoration: InputDecoration(
-                                    labelText: 'سنة البناء',
+                                    labelText: 'النوع',
                                     border: OutlineInputBorder(
                                         borderRadius:
                                             BorderRadius.circular(10))),
-                                keyboardType: TextInputType.number)),
+                              ),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        TextFormField(
+                          controller: locationController,
+                          decoration: InputDecoration(
+                              labelText: 'الموقع والحي 📍',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10))),
+                          validator: (v) =>
+                              v!.isEmpty ? 'يرجى إدخال الموقع' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          value: type,
+                          items: AppStrings.propertyTypes
+                              .map((t) =>
+                                  DropdownMenuItem(value: t, child: Text(t)))
+                              .toList(),
+                          onChanged: (v) =>
+                              setDialogState(() => type = v!),
+                          decoration: InputDecoration(
+                              labelText: 'النوع',
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10))),
+                        ),
                       ],
-                    ),
+                      const SizedBox(height: 16),
+                      if (isDesktop)
+                        Row(
+                          children: [
+                            Expanded(
+                                child: TextFormField(
+                                    controller: priceController,
+                                    decoration: InputDecoration(
+                                        labelText: purpose == 'بيع'
+                                            ? 'سعر البيع (ج.م)'
+                                            : 'الإيجار الشهري (ج.م)',
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    keyboardType: TextInputType.number)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: TextFormField(
+                                    controller: areaController,
+                                    decoration: InputDecoration(
+                                        labelText: 'المساحة (م²)',
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    keyboardType: TextInputType.number)),
+                          ],
+                        )
+                      else ...[
+                        TextFormField(
+                            controller: priceController,
+                            decoration: InputDecoration(
+                                labelText: purpose == 'بيع'
+                                    ? 'سعر البيع (ج.م)'
+                                    : 'الإيجار الشهري (ج.م)',
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10))),
+                            keyboardType: TextInputType.number),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                            controller: areaController,
+                            decoration: InputDecoration(
+                                labelText: 'المساحة (م²)',
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10))),
+                            keyboardType: TextInputType.number),
+                      ],
+                      const SizedBox(height: 16),
+                      if (type != 'أرض')
+                        Row(
+                          children: [
+                            Expanded(
+                                child: TextFormField(
+                                    controller: roomsController,
+                                    decoration: InputDecoration(
+                                        labelText: 'الغرف',
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    keyboardType: TextInputType.number)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: TextFormField(
+                                    controller: bathroomsController,
+                                    decoration: InputDecoration(
+                                        labelText: 'الحمامات',
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    keyboardType: TextInputType.number)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: TextFormField(
+                                    controller: floorController,
+                                    decoration: InputDecoration(
+                                        labelText: 'الدور',
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    keyboardType: TextInputType.number)),
+                          ],
+                        ),
+                      const SizedBox(height: 16),
+                      if (isDesktop)
+                        Row(
+                          children: [
+                            Expanded(
+                                child: TextFormField(
+                                    controller: roiController,
+                                    decoration: InputDecoration(
+                                        labelText: 'العائد ROI %',
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    keyboardType: TextInputType.number)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: TextFormField(
+                                    controller: yearController,
+                                    decoration: InputDecoration(
+                                        labelText: 'سنة البناء',
+                                        border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10))),
+                                    keyboardType: TextInputType.number)),
+                          ],
+                        )
+                      else ...[
+                        TextFormField(
+                            controller: roiController,
+                            decoration: InputDecoration(
+                                labelText: 'العائد ROI %',
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10))),
+                            keyboardType: TextInputType.number),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                            controller: yearController,
+                            decoration: InputDecoration(
+                                labelText: 'سنة البناء',
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10))),
+                            keyboardType: TextInputType.number),
+                      ],
                     const SizedBox(height: 16),
                     const Align(
                         alignment: Alignment.centerRight,
@@ -3191,7 +3328,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             ]
           ],
         ),
-      ),
+      },
     ),
   );
 }
@@ -4158,153 +4295,238 @@ class _DashboardScreenState extends State<DashboardScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+      builder: (context) {
+        final isDesktop = MediaQuery.of(context).size.width > 900;
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: StatefulBuilder(
+            builder: (context, setDialogState) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.edit_note_rounded, color: AppColors.primary, size: isDesktop ? 24 : 20),
                   ),
-                  child: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
-                ),
-                const SizedBox(width: 12),
-                const Text('تعديل بيانات العقار ✏️', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            content: SizedBox(
-              width: 800,
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-                              child: Row(
-                                children: [
-                                  const Text('الغرض:'),
-                                  const SizedBox(width: 12),
-                                  ChoiceChip(
-                                    label: const Text('بيع'),
-                                    selected: purpose == 'بيع',
-                                    onSelected: (_) => setDialogState(() => purpose = 'بيع'),
+                  const SizedBox(width: 12),
+                  Text('تعديل بيانات العقار ✏️', style: TextStyle(fontSize: isDesktop ? 18 : 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: SizedBox(
+                width: isDesktop ? 800 : MediaQuery.of(context).size.width * 0.95,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                                  child: Row(
+                                    children: [
+                                      const Text('الغرض:'),
+                                      const SizedBox(width: 12),
+                                      ChoiceChip(
+                                        label: const Text('بيع'),
+                                        selected: purpose == 'بيع',
+                                        onSelected: (_) => setDialogState(() => purpose = 'بيع'),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      ChoiceChip(
+                                        label: const Text('إيجار'),
+                                        selected: purpose == 'إيجار',
+                                        onSelected: (_) => setDialogState(() => purpose = 'إيجار'),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  ChoiceChip(
-                                    label: const Text('إيجار'),
-                                    selected: purpose == 'إيجار',
-                                    onSelected: (_) => setDialogState(() => purpose = 'إيجار'),
-                                  ),
-                                ],
+                                ),
                               ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: ['متاح', 'محجوز', 'مباع', 'مؤجر'].contains(status) ? status : 'متاح',
+                                  decoration: const InputDecoration(labelText: 'حالة العقار', border: OutlineInputBorder()),
+                                  items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
+                                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                                      .toList(),
+                                  onChanged: (val) => setDialogState(() => status = val!),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                            child: Row(
+                              children: [
+                                const Text('الغرض:'),
+                                const SizedBox(width: 12),
+                                ChoiceChip(
+                                  label: const Text('بيع'),
+                                  selected: purpose == 'بيع',
+                                  onSelected: (_) => setDialogState(() => purpose = 'بيع'),
+                                ),
+                                const SizedBox(width: 8),
+                                ChoiceChip(
+                                  label: const Text('إيجار'),
+                                  selected: purpose == 'إيجار',
+                                  onSelected: (_) => setDialogState(() => purpose = 'إيجار'),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: ['متاح', 'محجوز', 'مباع', 'مؤجر'].contains(status) ? status : 'متاح',
-                              decoration: const InputDecoration(labelText: 'حالة العقار', border: OutlineInputBorder()),
-                              items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
-                                  .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                                  .toList(),
-                              onChanged: (val) => setDialogState(() => status = val!),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: AppStrings.finishingTypes.contains(finishing) ? finishing : AppStrings.finishingTypes.first,
-                              decoration: const InputDecoration(labelText: 'مستوى التشطيب ✨', border: OutlineInputBorder()),
-                              items: AppStrings.finishingTypes
-                                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                  .toList(),
-                              onChanged: (val) => setDialogState(() => finishing = val!),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _customFolders.contains(folderName) ? folderName : (_customFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
-                              decoration: const InputDecoration(labelText: 'الفولدر / المنطقة 📁', border: OutlineInputBorder()),
-                              items: _customFolders.where((f) => f != 'الكل')
-                                  .map((f) => DropdownMenuItem(value: f, child: Text(f)))
-                                  .toList(),
-                              onChanged: (val) => setDialogState(() => folderName = val!),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: titleController,
-                        decoration: const InputDecoration(labelText: 'عنوان الإعلان (مطلوب)', border: OutlineInputBorder()),
-                        validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: locationController,
-                              decoration: const InputDecoration(labelText: 'الموقع والحي 📍', border: OutlineInputBorder()),
-                              validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              initialValue: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب'].contains(type) ? type : 'شقة',
-                              decoration: const InputDecoration(labelText: 'النوع', border: OutlineInputBorder()),
-                              items: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب']
-                                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                                  .toList(),
-                              onChanged: (val) => setDialogState(() => type = val!),
-                            ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: ['متاح', 'محجوز', 'مباع', 'مؤجر'].contains(status) ? status : 'متاح',
+                            decoration: const InputDecoration(labelText: 'حالة العقار', border: OutlineInputBorder()),
+                            items: ['متاح', 'محجوز', 'مباع', 'مؤجر']
+                                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                                .toList(),
+                            onChanged: (val) => setDialogState(() => status = val!),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: priceController,
-                              decoration: const InputDecoration(labelText: 'سعر البيع/الإيجار (ج.م)', border: OutlineInputBorder()),
-                            ),
+                        const SizedBox(height: 12),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: AppStrings.finishingTypes.contains(finishing) ? finishing : AppStrings.finishingTypes.first,
+                                  decoration: const InputDecoration(labelText: 'مستوى التشطيب ✨', border: OutlineInputBorder()),
+                                  items: AppStrings.finishingTypes
+                                      .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                      .toList(),
+                                  onChanged: (val) => setDialogState(() => finishing = val!),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: _customFolders.contains(folderName) ? folderName : (_customFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
+                                  decoration: const InputDecoration(labelText: 'الفولدر / المنطقة 📁', border: OutlineInputBorder()),
+                                  items: _customFolders.where((f) => f != 'الكل')
+                                      .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                      .toList(),
+                                  onChanged: (val) => setDialogState(() => folderName = val!),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          DropdownButtonFormField<String>(
+                            value: AppStrings.finishingTypes.contains(finishing) ? finishing : AppStrings.finishingTypes.first,
+                            decoration: const InputDecoration(labelText: 'مستوى التشطيب ✨', border: OutlineInputBorder()),
+                            items: AppStrings.finishingTypes
+                                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                .toList(),
+                            onChanged: (val) => setDialogState(() => finishing = val!),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: areaController,
-                              decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder()),
-                            ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _customFolders.contains(folderName) ? folderName : (_customFolders.where((f) => f != 'الكل').firstOrNull ?? 'عام'),
+                            decoration: const InputDecoration(labelText: 'الفولدر / المنطقة 📁', border: OutlineInputBorder()),
+                            items: _customFolders.where((f) => f != 'الكل')
+                                .map((f) => DropdownMenuItem(value: f, child: Text(f)))
+                                .toList(),
+                            onChanged: (val) => setDialogState(() => folderName = val!),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(child: TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف', border: OutlineInputBorder()))),
-                          const SizedBox(width: 8),
-                          Expanded(child: TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder()))),
-                          const SizedBox(width: 8),
-                          Expanded(child: TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()))),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: titleController,
+                          decoration: const InputDecoration(labelText: 'عنوان الإعلان (مطلوب)', border: OutlineInputBorder()),
+                          validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: locationController,
+                                  decoration: const InputDecoration(labelText: 'الموقع والحي 📍', border: OutlineInputBorder()),
+                                  validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب'].contains(type) ? type : 'شقة',
+                                  decoration: const InputDecoration(labelText: 'النوع', border: OutlineInputBorder()),
+                                  items: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب']
+                                      .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                                      .toList(),
+                                  onChanged: (val) => setDialogState(() => type = val!),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(
+                            controller: locationController,
+                            decoration: const InputDecoration(labelText: 'الموقع والحي 📍', border: OutlineInputBorder()),
+                            validator: (v) => v!.isEmpty ? 'مطلوب' : null,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب'].contains(type) ? type : 'شقة',
+                            decoration: const InputDecoration(labelText: 'النوع', border: OutlineInputBorder()),
+                            items: ['شقة', 'فيلا', 'محل تجاري', 'أرض', 'مكتب']
+                                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                                .toList(),
+                            onChanged: (val) => setDialogState(() => type = val!),
+                          ),
                         ],
-                      ),
+                        const SizedBox(height: 12),
+                        if (isDesktop)
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: priceController,
+                                  decoration: const InputDecoration(labelText: 'سعر البيع/الإيجار (ج.م)', border: OutlineInputBorder()),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: areaController,
+                                  decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder()),
+                                ),
+                              ),
+                            ],
+                          )
+                        else ...[
+                          TextFormField(
+                            controller: priceController,
+                            decoration: const InputDecoration(labelText: 'سعر البيع/الإيجار (ج.م)', border: OutlineInputBorder()),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: areaController,
+                            decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder()),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(child: TextFormField(controller: roomsController, decoration: const InputDecoration(labelText: 'الغرف', border: OutlineInputBorder()))),
+                            const SizedBox(width: 8),
+                            Expanded(child: TextFormField(controller: bathroomsController, decoration: const InputDecoration(labelText: 'الحمامات', border: OutlineInputBorder()))),
+                            const SizedBox(width: 8),
+                            Expanded(child: TextFormField(controller: floorController, decoration: const InputDecoration(labelText: 'الدور', border: OutlineInputBorder()))),
+                          ],
+                        ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: descController,
