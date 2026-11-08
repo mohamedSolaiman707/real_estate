@@ -69,7 +69,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   void _launchWhatsApp(Property p) async {
     final msg = Uri.encodeComponent(
         'مرحباً، أريد الاستفسار عن تفاصيل العقار: ${p.title} في ${p.location} (كود العقار: #${p.id.substring(0, p.id.length > 5 ? 5 : p.id.length)})');
-    final url = Uri.parse("https://wa.me/201014250577?text=$msg");
+    final url = Uri.parse("https://wa.me/201098549272?text=$msg");
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     }
@@ -930,7 +930,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             ),
           ),
           ElevatedButton.icon(
-            onPressed: () => _launchPhoneCall('01014250577'),
+            onPressed: () => _launchPhoneCall('01098549272'),
             icon: const Icon(Icons.phone_rounded, color: Colors.white, size: 16),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.secondary,
@@ -1143,10 +1143,10 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                 width: double.infinity,
                 height: 46,
                 child: TextButton.icon(
-                  onPressed: () => _launchPhoneCall('01014250577'),
+                  onPressed: () => _launchPhoneCall('01098549272'),
                   icon: const Icon(Icons.phone_in_talk_rounded, color: AppColors.textSecondary, size: 18),
                   label: const Text(
-                    'اتصال مباشر بـ 01014250577',
+                    'اتصال مباشر بـ 01098549272',
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
                   ),
                 ),

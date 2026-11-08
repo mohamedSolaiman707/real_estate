@@ -58,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _launchWhatsApp() async {
     final Uri whatsappUri = Uri.parse(
-        "https://wa.me/201014250577?text=${Uri.encodeComponent('مرحبًا، أريد الاستفسار عن العقارات المتاحة في طنطا والقاهرة')}");
+        "https://wa.me/201098549272?text=${Uri.encodeComponent('مرحبًا، أريد الاستفسار عن العقارات المتاحة في طنطا والقاهرة')}");
     if (await canLaunchUrl(whatsappUri)) {
       await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
     } else {

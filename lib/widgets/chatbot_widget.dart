@@ -188,7 +188,7 @@ class _ChatBotWidgetState extends State<ChatBotWidget> {
 
   Future<void> _launchWhatsApp(String message) async {
     final Uri whatsappUri = Uri.parse(
-        "https://wa.me/201014250577?text=${Uri.encodeComponent(message)}");
+        "https://wa.me/201098549272?text=${Uri.encodeComponent(message)}");
     if (await canLaunchUrl(whatsappUri)) {
       await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
     }
@@ -512,7 +512,7 @@ class _ChatBotWidgetState extends State<ChatBotWidget> {
         return;
       } else if (_isWaitingForPhone) {
         _triggerBotReply(
-          'من فضلك أدخل رقم تليفون صحيح مكون من 11 رقم (مثلاً: 01014250577).',
+          'من فضلك أدخل رقم تليفون صحيح مكون من 11 رقم (مثلاً: 01098549272).',
           setModalState,
         );
         return;
@@ -817,7 +817,7 @@ class _ChatBotWidgetState extends State<ChatBotWidget> {
             icon: const Icon(Icons.phone_in_talk_rounded,
                 color: Colors.white, size: 20),
             tooltip: 'اتصال مباشر',
-            onPressed: () => _launchPhoneCall('01014250577'),
+            onPressed: () => _launchPhoneCall('01098549272'),
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded,
